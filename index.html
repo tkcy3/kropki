@@ -168,9 +168,10 @@ button:active{transform:scale(.95)}
 .instBox{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;text-align:center}
 .instIcon{width:96px;height:96px;border-radius:22px;box-shadow:0 4px 14px rgba(0,0,0,.15);margin-bottom:14px}
 .instBox h1{margin:0 0 18px;font-size:30px;letter-spacing:4px;font-weight:900}
-.instLead{margin:0 0 10px;font-size:20px;font-weight:700;line-height:1.5}
+.instLead{margin:0 0 18px;font-size:20px;font-weight:700;line-height:1.5}
 .instSub{margin:0 0 26px;font-size:15px;color:var(--muted);line-height:1.6}
 .instGo{width:100%;height:62px;font-size:21px;font-weight:800;background:var(--num);border-color:var(--num);color:var(--numTx);border-radius:16px}
+.instFx{list-style:none;margin:4px 0 26px;padding:14px 18px;width:100%;border-radius:14px;background:var(--panel);border:1px solid var(--line);text-align:left}.instFx li{display:flex;align-items:center;gap:12px;font-size:16px;line-height:1.5;padding:6px 0;color:var(--fg)}.instFx span{font-size:22px;width:28px;text-align:center;flex:none}
 #instSteps{width:100%;margin-top:14px}
 #instSteps .a2h{margin:4px 0}
 .instSkip{margin-top:28px;background:none;border:0;color:var(--muted);font-size:15px;text-decoration:underline;padding:10px}
@@ -326,7 +327,7 @@ button.plain{padding:8px 12px;font-size:15px}
     <img src="icon-192.png" alt="" class="instIcon">
     <h1>KROPKI</h1>
     <p class="instLead">ホーム画面にアイコンを追加して<br>アプリとして遊びましょう</p>
-    <p class="instSub">次からはアイコンをタップするだけ。<br>URLを覚えておく必要はありません。</p>
+    <ul class="instFx"><li><span>📱</span>フルスクリーンでプレイできます</li><li><span>⚡</span>アイコンをタップするだけで、すぐ起動</li><li><span>📶</span>電波がないところでも遊べます</li></ul>
     <button id="instGo" class="instGo">📲 ホーム画面に追加</button>
     <div id="instSteps"></div>
     <button id="instSkip" class="instSkip">今はブラウザで遊ぶ</button>
@@ -602,7 +603,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
-  {v:'0.9.1', d:'2026-11-20', items:['📲 ブラウザで開いたときは、最初にホーム画面への追加をご案内するようにしました']},
+  {v:'0.9.1', d:'2026-11-20', items:['📲 ブラウザで開いたときは、最初にホーム画面への追加をご案内するようにしました（フルスクリーンで遊べます）']},
   {v:'0.9.0', d:'2026-11-20', items:['🎵 BGMをつけました。のんびりしたオルゴール風の曲です（設定で OFF・小・中・大）']},
   {v:'0.8.1', d:'2026-11-20', items:['🐈‍⬛ スマホの「アニメーションを減らす」設定がONでも、ねこをタップすると「♡」が出るようにしました','🐈‍⬛ 寝息を「zzz」と小さめの文字で、薄く表示するようにしました','🐈‍⬛ 「♡」や寝息を、ねこの頭のすぐ上に出すようにしました','🐈‍⬛ ハートをドット絵にしました。寝息はのんびり出るようにしました','🐈‍⬛ ハートと寝息が、最後にゆっくり右上へ1ドット動くようにしました']},
   {v:'0.8.0', d:'2026-11-20', items:['🐈‍⬛ ねこの「♡」や寝息「zZ」を大きく見やすくしました。ねこをタップしやすくしました']},
