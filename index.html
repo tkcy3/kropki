@@ -88,7 +88,7 @@ button:active{transform:scale(.95)}
 #catBox.walking #catBody{animation:catBob .36s steps(2) infinite}
 @keyframes catBob{50%{transform:translateY(-2px)}}
 #catBody.hop{animation:catHop .5s ease-out}
-@keyframes catHop{0%{transform:translateY(0) scaleY(.85)}45%{transform:translateY(-16px) scaleY(1.05)}100%{transform:translateY(0)}}
+@keyframes catHop{0%{transform:translateY(0) scaleY(.85)}45%{transform:translateY(-9px) scaleY(1.05)}100%{transform:translateY(0)}}
 #catBody.shock{animation:catShock .45s linear}
 @keyframes catShock{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px) translateY(-6px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 #catBody.think{animation:catThink 1.4s ease-in-out}
@@ -96,7 +96,7 @@ button:active{transform:scale(.95)}
 #catBody.party{animation:catHop .55s ease-out infinite}
 #catBox.sleep #catSp{animation:catBreath 3s ease-in-out infinite}
 @keyframes catBreath{50%{transform:scaleY(.94)}}
-#catFx{position:absolute;left:60%;top:-4px;font-size:18px;font-weight:800;color:var(--cat);opacity:0;pointer-events:none;white-space:nowrap}
+#catFx{position:absolute;left:70%;top:-10px;font-size:13px;font-weight:800;color:var(--cat);opacity:0;pointer-events:none;white-space:nowrap}
 #catFx.on{animation:catFx 1.2s ease-out}
 #catFx.loop{animation:catFx 2.4s ease-out infinite}
 @keyframes catFx{0%{opacity:0;transform:translate(0,4px)}25%{opacity:1}100%{opacity:0;transform:translate(14px,-22px)}}
@@ -587,6 +587,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.6.1', d:'2026-11-20', items:['🐈 ねこを小さくしました']},
   {v:'0.6.0', d:'2026-11-20', items:['🐈 盤面の上に、ドットのねこがやってきました（設定でOFFにできます）']},
   {v:'0.5.3', d:'2026-11-20', items:['確認のボタンを「はい／いいえ」にしました']},
   {v:'0.5.2', d:'2026-11-20', items:['📋 更新内容の見せ方を新しくしました']},
@@ -1321,11 +1322,11 @@ function catSvg(map){
 function catDraw(){ $('catSp').innerHTML = catSvg(CAT.state === 'sleep' ? CAT_SLEEP : CAT_AWAKE); }
 function catLayout(gap, width, bottom){
   var st = $('catStage');
-  CAT.on = !!S.set.cat && gap >= 52;
+  CAT.on = !!S.set.cat && gap >= 34;
   st.style.display = CAT.on ? '' : 'none';
   if (!CAT.on) return;
   st.style.height = gap + 'px'; st.style.bottom = bottom + 'px'; st.style.top = 'auto';
-  var sc = Math.max(3, Math.min(7, Math.floor((gap - 20) / 8)));
+  var sc = 3; // small: about a quarter of the first version's area
   if (sc !== CAT.sc || !$('catSp').firstChild) { CAT.sc = sc; catDraw(); }
   CAT.w = 10 * CAT.sc; CAT.maxX = Math.max(0, width - CAT.w);
   if (CAT.x > CAT.maxX) CAT.x = CAT.maxX;
@@ -1355,7 +1356,7 @@ function catWalk(){
   if (!CAT.on || CAT.state !== 'idle' || CAT.maxX < 20) return;
   var to = Math.round(Math.random() * CAT.maxX), d = to - CAT.x;
   if (Math.abs(d) < 24) return;
-  var box = $('catBox'), dur = Math.abs(d) / 28;
+  var box = $('catBox'), dur = Math.abs(d) / 18;
   box.classList.toggle('flip', d < 0);
   box.style.transitionDuration = dur + 's'; box.classList.add('walking');
   box.style.left = to + 'px'; CAT.x = to;
