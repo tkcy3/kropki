@@ -270,6 +270,7 @@ button.plain{padding:8px 12px;font-size:15px}
   <div class="row">同じ数字を強調<div class="seg" data-k="same"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">メモ自動消去<div class="seg" data-k="autoMemo"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">数字の大きさ<div class="seg" data-k="big"><button data-v="0">大</button><button data-v="1">特大</button></div></div>
+  <div class="row">BGM<div class="seg" data-k="bgm"><button data-v="0">OFF</button><button data-v="1">小</button><button data-v="2">中</button><button data-v="3">大</button></div></div>
   <div class="row">ねこ<div class="seg" data-k="cat"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">タイマー<div class="seg" data-k="timer"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">記録<span id="statLine" style="font-size:15px;color:var(--muted)"></span></div>
@@ -578,6 +579,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.9.0', d:'2026-11-20', items:['🎵 BGMをつけました。のんびりしたオルゴール風の曲です（設定で OFF・小・中・大）']},
   {v:'0.8.1', d:'2026-11-20', items:['🐈‍⬛ スマホの「アニメーションを減らす」設定がONでも、ねこをタップすると「♡」が出るようにしました','🐈‍⬛ 寝息を「zzz」と小さめの文字で、薄く表示するようにしました','🐈‍⬛ 「♡」や寝息を、ねこの頭のすぐ上に出すようにしました','🐈‍⬛ ハートをドット絵にしました。寝息はのんびり出るようにしました','🐈‍⬛ ハートと寝息が、最後にゆっくり右上へ1ドット動くようにしました']},
   {v:'0.8.0', d:'2026-11-20', items:['🐈‍⬛ ねこの「♡」や寝息「zZ」を大きく見やすくしました。ねこをタップしやすくしました']},
   {v:'0.7.9', d:'2026-11-20', items:['ホーム画面のアイコンを新しくしました']},
@@ -633,7 +635,7 @@ var KEY = 'kropki-save-v1';
 var S = null;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
 if (!S || typeof S !== 'object') S = {};
-function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1, cat:1}; }
+function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1, cat:1, bgm:1}; }
 S.set = Object.assign(defaultSet(), S.set || {});
 S.prog = S.prog || {};
 if (!S.set.calm) { S.set.calm = 1; S.set.theme = 'light'; }
@@ -686,7 +688,7 @@ function renderSettings(){
       b.classList.toggle('on', String(S.set[k]) === b.dataset.v);
       b.onclick = function(){
         var v = b.dataset.v; S.set[k] = (k === 'theme') ? v : Number(v);
-        save(); applyTheme(); renderSettings(); updateHelp(); if (G) { if (k === 'dotRev') buildBoard(); layout(); render(); } updateTime();
+        save(); applyTheme(); renderSettings(); updateHelp(); if (k === 'bgm') bgmApply(); if (G) { if (k === 'dotRev') buildBoard(); layout(); render(); } updateTime();
       };
     });
   });
@@ -1467,7 +1469,72 @@ setInterval(function(){
     G.time += dt; updateTime(); if (Math.floor(G.time) % 5 === 0) save();
   }
 }, 1000);
-document.addEventListener('visibilitychange', function(){ lastTick = Date.now(); if (document.hidden) save(true); });
+document.addEventListener('visibilitychange', function(){ lastTick = Date.now(); if (document.hidden) save(true); bgmVisibility(); });
+
+/* ---------- BGM: an original, slow music-box loop in F major (Web Audio, no files) ---------- */
+var AU = {ctx:null, out:null, echo:null, playing:false, step:0, loop:0, next:0, timer:null};
+var BGM_VOL = [0, .5, .85, 1.25];
+var BGM_STEP = 60 / 66 / 2;   // eighth notes at 66 bpm
+// 16 bars: [root (MIDI), minor?]
+var BGM_CH = [[41,0],[45,1],[46,0],[48,0],[41,0],[38,1],[43,1],[48,0],[38,1],[45,1],[46,0],[41,0],[43,1],[48,0],[41,0],[41,0]];
+var BGM_MEL = [
+  [72,0,69,0,65,0,0,0],[69,0,72,0,76,0,74,0],[74,0,0,72,70,0,0,0],[72,0,67,0,0,0,0,0],
+  [77,0,76,0,72,0,69,0],[74,0,0,0,69,0,0,0],[70,0,72,0,74,0,70,0],[72,0,0,0,0,0,0,0],
+  [74,0,77,0,76,0,74,0],[72,0,0,0,76,0,0,0],[77,0,74,0,70,0,72,0],[69,0,0,0,0,0,0,0],
+  [67,0,70,0,74,0,72,0],[70,0,69,0,67,0,0,0],[65,0,69,0,72,0,77,0],[76,0,0,0,77,0,0,0]];
+function auInit(){
+  try {
+    if (!AU.ctx) {
+      var C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+      var c = new C(); AU.ctx = c;
+      AU.out = c.createGain(); AU.out.gain.value = BGM_VOL[S.set.bgm || 0];
+      var comp = c.createDynamicsCompressor(); AU.out.connect(comp); comp.connect(c.destination);
+      var ei = c.createGain(), dl = c.createDelay(1.5), fb = c.createGain(), lp = c.createBiquadFilter(), wet = c.createGain();
+      dl.delayTime.value = .45; fb.gain.value = .32; lp.type = 'lowpass'; lp.frequency.value = 1800; wet.gain.value = .45;
+      ei.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(wet); wet.connect(AU.out); AU.echo = ei;
+    }
+    if (AU.ctx.state === 'suspended') AU.ctx.resume().catch(function(){});
+  } catch (e) {}
+}
+function auNote(m, t, dur, o){
+  var c = AU.ctx, osc = c.createOscillator(), g = c.createGain(), n = osc;
+  osc.type = o.type || 'sine'; osc.frequency.value = 440 * Math.pow(2, (m - 69) / 12);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(o.gain, t + (o.att || .01)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  if (o.lp) { var f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = o.lp; osc.connect(f); n = f; }
+  n.connect(g); g.connect(AU.out);
+  if (o.echo) { var e = c.createGain(); e.gain.value = o.echo; g.connect(e); e.connect(AU.echo); }
+  osc.start(t); osc.stop(t + dur + .05);
+}
+function bgmStep(i, t){
+  var bar = i >> 3, pos = i & 7, ch = BGM_CH[bar], root = ch[0], tri = ch[1] ? [0,3,7] : [0,4,7];
+  if (pos === 0) tri.forEach(function(x){ auNote(root + 24 + x, t, BGM_STEP*8 + .4, {type:'triangle', gain:.016, att:.8, lp:1200}); });   // soft pad
+  if (pos === 0) auNote(root, t, BGM_STEP*3.6, {gain:.07, att:.03});        // bass
+  if (pos === 4) auNote(root + 7, t, BGM_STEP*3, {gain:.045, att:.03});
+  if (AU.loop % 2 === 0) {      // music-box melody
+    var m = BGM_MEL[bar][pos];
+    if (m) { auNote(m, t, 1.6, {gain:.06, att:.005, echo:.45}); auNote(m + 12, t, .7, {gain:.012, att:.005}); }
+  } else if (pos % 2 === 0) {   // second time round: just a quiet arpeggio, to rest the ears
+    auNote(root + 24 + tri[[0,1,2,1][pos/2]], t, 1.2, {gain:.03, att:.01, echo:.5});
+  }
+}
+function bgmSched(){
+  var c = AU.ctx; if (!c || !AU.playing) return;
+  if (AU.next < c.currentTime - .1) AU.next = c.currentTime + .05;
+  while (AU.next < c.currentTime + .2) { bgmStep(AU.step, AU.next); AU.step = (AU.step + 1) % 128; if (AU.step === 0) AU.loop++; AU.next += BGM_STEP; }
+}
+function bgmStart(){ auInit(); if (!AU.ctx || AU.playing) return; AU.playing = true; AU.step = 0; AU.loop = 0; AU.next = AU.ctx.currentTime + .15; AU.timer = setInterval(bgmSched, 25); }
+function bgmStop(){ AU.playing = false; clearInterval(AU.timer); }
+function bgmApply(){
+  if (!S.set.bgm) { bgmStop(); return; }
+  bgmStart(); if (AU.out) AU.out.gain.value = BGM_VOL[S.set.bgm];
+}
+function bgmVisibility(){
+  if (!AU.ctx) return;
+  if (document.hidden) AU.ctx.suspend().catch(function(){});
+  else if (S.set.bgm) AU.ctx.resume().catch(function(){});
+}
+// browsers only allow sound after a tap, so the music starts with the first touch
+document.addEventListener('pointerdown', function(){ if (S.set.bgm && !AU.playing) bgmStart(); }, true);
 
 /* ---------- keyboard (PC) ---------- */
 document.addEventListener('keydown', function(e){
