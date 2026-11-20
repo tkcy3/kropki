@@ -163,7 +163,16 @@ button:active{transform:scale(.95)}
 button.plain{padding:8px 12px;font-size:15px}
 .closeBtn{width:100%;height:56px;font-size:20px;font-weight:700;margin-top:14px}
 .ver{color:var(--muted);font-size:14px;text-align:center;margin-top:10px}
-.notes{font-size:15px;color:var(--muted);line-height:1.6;margin:6px 0 0;padding-left:20px}
+#ver{font-size:14px;color:var(--muted);margin-top:14px;background:none;border:0;padding:6px 10px}
+#ver.new{color:var(--accent);font-weight:700}
+.rowBtn{width:100%;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.25);border-radius:0;text-align:left;color:var(--fg)}
+.rowBtn .rs{color:var(--muted);font-size:15px}
+.newb{display:inline-block;margin-left:8px;padding:2px 7px;border-radius:8px;background:var(--accent);color:var(--panel);font-size:11px;font-weight:800;vertical-align:middle}
+.chip{display:inline-block;padding:3px 12px;border-radius:12px;border:2px solid var(--btn);font-size:14px;color:var(--muted)}
+.chg h3{font-size:16px;margin:12px 0 4px;color:var(--accent)}
+.chg ul{margin:0;padding-left:20px;font-size:15px;line-height:1.7}
+.chg details{margin:0 0 4px}
+.chg summary{font-size:15px;color:var(--muted);padding:8px 0;cursor:pointer}
 .danger{border-color:var(--err);color:var(--err);font-size:15px;padding:8px 12px}
 
 /* help */
@@ -204,7 +213,8 @@ button.plain{padding:8px 12px;font-size:15px}
   <div class="logo">
     <h1>KROPKI</h1>
     <div class="dots"><i></i><i class="b"></i><i></i><i class="b"></i></div>
-    <div id="homeStat" style="margin-top:22px;font-size:18px;color:var(--muted)"></div>
+    <button id="ver"></button>
+    <div id="homeStat" style="margin-top:14px;font-size:18px;color:var(--muted)"></div>
     <div id="a2hChip" class="hidden"><button id="a2hGo"><span>📲</span><b>ホーム画面に追加<small>全画面ですぐ遊べる</small></b><i>›</i></button><button id="a2hX" aria-label="閉じる">✕</button></div>
   </div>
   <div class="homeBody">
@@ -246,12 +256,10 @@ button.plain{padding:8px 12px;font-size:15px}
   <div class="row">数字の大きさ<div class="seg" data-k="big"><button data-v="0">大</button><button data-v="1">特大</button></div></div>
   <div class="row">タイマー<div class="seg" data-k="timer"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">記録<span id="statLine" style="font-size:15px;color:var(--muted)"></span></div>
-  <div class="row">更新内容<span></span></div>
-  <ul class="notes" id="notes"></ul>
+  <button class="row rowBtn" id="stVer"><span>📋 更新内容<span class="newb" id="stVerNew">NEW</span></span><span class="rs">v<span id="stVerNo"></span> ›</span></button>
   <div class="row" id="a2hRow">ホーム画面に追加<button class="plain" id="a2hSet">📲 追加 ›</button></div>
   <div class="row">記録のリセット<button class="danger" id="resetBtn">リセット</button></div>
   <div class="row" style="border:none">すべて初期化<button class="danger" id="wipeBtn">初期化</button></div>
-  <div class="ver" id="ver"></div>
   <button class="closeBtn" data-close>閉じる</button>
 </div></div>
 
@@ -281,6 +289,14 @@ button.plain{padding:8px 12px;font-size:15px}
   <div class="a2g"><div><span>📱</span>全画面</div><div><span>⚡</span>すぐ起動</div><div><span>💾</span>記録もそのまま</div></div>
   <div id="a2hSteps"></div>
   <button class="closeBtn" data-close>閉じる</button>
+</div></div>
+
+<!-- CHANGELOG -->
+<div class="ov" id="chgOv"><div class="sheet">
+  <h2>📋 更新内容</h2>
+  <p style="text-align:center;margin:0 0 6px"><span class="chip" id="chgVer"></span></p>
+  <div class="chg" id="chgBody"></div>
+  <button class="closeBtn" id="chgBack">戻る</button>
 </div></div>
 
 <!-- CONFIRM -->
@@ -543,8 +559,28 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 </script>
 <script>
 (function(){
-var VERSION = '0.5.1';
-var NOTES = ['0.5.1 ホーム画面のタイトルを上下中央に','0.5.0 ホーム画面に追加の案内（GitHub版）。設定に「すべて初期化」を追加','0.4.0 途中のゲームを3つまで保存。「つづき」から選んで再開、不要なものは消せる','0.3.4 プレイ中に「？」から始めたチュートリアルは、終わると元のゲームに戻るように','0.3.3 盤面を左右と下の余白いっぱいまで拡大（枠は細いまま）。案内欄はボタンの上に重ねて表示','0.3.2 案内欄の×ボタンを廃止（チュートリアルは左上の◀でやめる、ヒントは最後に「閉じる」）','0.3.1 盤面を画面幅いっぱいに。左右の端を上のボタン・下のボタンとそろえた','0.3.0 ヒントを「場所→理由→数字」の3段階に（自動では入れない）。チュートリアル追加。消しゴムアイコン、全メモ廃止、ボタン順を変更','0.2.4 リセットボタンを追加（盤面を最初の状態に戻す・戻すボタンで取り消し可）','0.2.3 黒丸＝差1、白丸＝2倍に入れ替え（設定「点の意味」で元に戻せます）','0.2.2 メモの数字を縦横そろった3×3の並びに（点にも重ならない位置）','0.2.1 色を落ち着いたトーンに変更（目にやさしい紙色が標準、暗い画面は真っ黒をやめてチャコール）','0.2.0 カラーデザインに変更。ボタンを押している間は色が変わり、数字を入れた・消したマスが光るように','0.1.4 メモボタンと数字ボタンの幅・位置をそろえた','0.1.3 メモの数字が点に隠れないよう配置を変更、点を少し小さく','0.1.2 数字を大きく太く・見やすい色に。設定に「数字の大きさ（大／特大）」を追加','0.1.1 黒丸・白丸の色を見た目どおりに修正（黒丸＝中が黒、白丸＝中が白）','0.1.0 はじめての版：4×4〜9×9、4段階の難しさ、レベル無限、メモ、ヒント、自動セーブ'];
+var CHANGELOG = [
+  {v:'0.5.2', d:'2026-11-20', items:['📋 更新内容の見せ方を新しくしました']},
+  {v:'0.5.1', d:'2026-11-20', items:['ホーム画面のタイトルを、上下のまん中に置きました']},
+  {v:'0.5.0', d:'2026-11-20', items:['📲 ホーム画面に追加できるようにしました（設定から）。全画面ですぐ遊べます','設定に「すべて初期化」を追加しました']},
+  {v:'0.4.0', d:'2026-11-20', items:['途中のゲームを3つまで残せるようにしました。「つづき」から選んで再開できます']},
+  {v:'0.3.4', d:'2026-11-20', items:['遊んでいる途中で開いたチュートリアルは、終わると元のゲームに戻るようにしました']},
+  {v:'0.3.3', d:'2026-11-20', items:['盤面をもっと大きく表示するようにしました']},
+  {v:'0.3.2', d:'2026-11-20', items:['案内の ✕ ボタンをなくし、押しまちがいを防ぎました']},
+  {v:'0.3.1', d:'2026-11-20', items:['盤面の端を、ボタンの端とそろえました']},
+  {v:'0.3.0', d:'2026-11-20', items:['💡 ヒントを「場所 → 理由 → 数字」の3段階にしました。答えは自動で入りません','📖 チュートリアルを追加しました','消しゴムのボタンを追加し、ボタンの並びを見直しました']},
+  {v:'0.2.4', d:'2026-11-20', items:['⟲ リセットボタンを追加しました']},
+  {v:'0.2.3', d:'2026-11-20', items:['黒丸と白丸の意味を入れ替えられるようにしました（設定から）']},
+  {v:'0.2.2', d:'2026-11-20', items:['メモの数字を、たて・よこそろえて並べました']},
+  {v:'0.2.1', d:'2026-11-20', items:['目にやさしい、落ち着いた色にしました']},
+  {v:'0.2.0', d:'2026-11-20', items:['ボタンを押している間や、数字を入れた・消したときに、色で分かるようにしました']},
+  {v:'0.1.4', d:'2026-11-20', items:['メモと数字のボタンの位置をそろえました']},
+  {v:'0.1.3', d:'2026-11-20', items:['メモの数字が点に隠れないようにしました']},
+  {v:'0.1.2', d:'2026-11-20', items:['数字を大きく太くしました。設定で「特大」も選べます']},
+  {v:'0.1.1', d:'2026-11-20', items:['黒丸と白丸の色を、見たとおりに直しました']},
+  {v:'0.1.0', d:'2026-11-20', items:['はじめての版']}
+];
+var VERSION = CHANGELOG[0].v; // ずっとベータ版なので 0.〜
 var DIFF = ['やさしい','ふつう','むずかしい','鬼'];
 var DSTAR = ['★','★★','★★★','👹'];
 var PC = KCORE.PC;
@@ -622,8 +658,7 @@ function renderSettings(){
   });
   var tot = 0; for (var k in S.prog) tot += S.prog[k].cnt || 0;
   $('statLine').textContent = 'クリア ' + tot + ' 回';
-  $('notes').innerHTML = NOTES.map(function(n){ return '<li>' + n + '</li>'; }).join('');
-  $('ver').textContent = 'KROPKI v' + VERSION;
+  $('stVerNo').textContent = VERSION; $('stVerNew').classList.toggle('hidden', !verUnseen());
 }
 $('hSet').onclick = function(){ renderSettings(); refreshA2H(); openOv('setOv'); };
 function openHelp(){ S.set.helped = 1; save(); openOv('helpOv'); }
@@ -667,8 +702,42 @@ $('a2hGo').onclick = showAddHome;
 $('a2hSet').onclick = showAddHome;
 $('a2hX').onclick = function(){ S.a2h = 1; save(); refreshA2H(); };
 
+/* ---------- version & changelog (same style as Dungeon Chain) ---------- */
+function chgByDay(){ // updates of the same day are shown together, newest first
+  var out = [];
+  CHANGELOG.forEach(function(c){
+    var g = out.filter(function(x){ return x.d === c.d; })[0];
+    if (!g) { g = {d:c.d, items:[]}; out.push(g); }
+    g.items = g.items.concat(c.items);
+  });
+  return out;
+}
+function verUnseen(){
+  if (S.seenVer === VERSION) return false;
+  var tot = 0; for (var k in S.prog) tot += S.prog[k].cnt || 0;
+  if (!S.seenVer && !tot && !Object.keys(S.games).length) { S.seenVer = VERSION; save(); return false; }
+  return true;
+}
+function refreshVer(){ var b = $('ver'), nw = verUnseen(); b.textContent = 'v' + VERSION + (nw ? ' ・ 更新内容を見る' : ''); b.classList.toggle('new', nw); }
+var chgBack = null;
+function showChangelog(back){
+  S.seenVer = VERSION; save(); refreshVer();
+  var top = CHANGELOG[0];
+  var days = chgByDay().map(function(g){ return {d:g.d, items:g.items.filter(function(x){ return top.items.indexOf(x) < 0; })}; }).filter(function(g){ return g.items.length; });
+  var ul = function(items){ return '<ul>' + items.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ul>'; };
+  var dt = function(d){ return d.slice(5).replace('-', '/'); };
+  $('chgVer').textContent = 'v' + VERSION;
+  $('chgBody').innerHTML = '<h3>✨ ' + dt(top.d) + '</h3>' + ul(top.items) + days.map(function(g){ return '<details><summary>' + dt(g.d) + '</summary>' + ul(g.items) + '</details>'; }).join('');
+  chgBack = back || null;
+  openOv('chgOv');
+}
+$('chgBack').onclick = function(){ closeOv('chgOv'); if (chgBack) chgBack(); };
+$('ver').onclick = function(){ showChangelog(); };
+$('stVer').onclick = function(){ closeOv('setOv'); showChangelog(function(){ renderSettings(); refreshA2H(); openOv('setOv'); }); };
+
 /* ---------- home ---------- */
 function renderHome(){
+  refreshVer();
   refreshA2H();
   var d = S.set.diff, tot = 0;
   for (var pk in S.prog) tot += S.prog[pk].cnt || 0;
