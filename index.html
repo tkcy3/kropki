@@ -157,9 +157,12 @@ button:active{transform:scale(.95)}
 .seg button.on{border-color:var(--accent);color:var(--accent)}
 .lvGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 #lvStat{text-align:center;font-size:16px;color:var(--muted);margin:-4px 0 14px}
-.lvGrid button{height:64px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:var(--cell);border-color:var(--btn)}
-.lvGrid b{font-size:21px;font-weight:800}
-.lvGrid small{font-size:12.5px;color:var(--muted);min-height:1em}
+.lvGrid button{height:104px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--cell);border-color:var(--btn)}
+.lvGrid .thumb{width:46px;height:46px;border-width:1.5px}
+.thumb i.m{background:color-mix(in srgb,var(--user) 30%,var(--cell))}
+.thumb i.f{background:var(--good);opacity:.55}
+.lvGrid b{font-size:18px;font-weight:800;line-height:1}
+.lvGrid small{font-size:12px;color:var(--muted);min-height:1em;line-height:1}
 .lvGrid button.ok{background:color-mix(in srgb,var(--good) 16%,var(--cell))}
 .lvGrid button.ok small{color:var(--good)}
 .lvGrid button.go{border-color:var(--accent);border-width:2px}
@@ -258,7 +261,6 @@ button.plain{padding:8px 12px;font-size:15px}
     <div id="a2hChip" class="hidden"><button id="a2hGo"><span>📲</span><b>ホーム画面に追加<small>全画面ですぐ遊べる</small></b><i>›</i></button><button id="a2hX" aria-label="閉じる">✕</button></div>
   </div>
   <div class="homeBody">
-    <button class="cont" id="contBtn"></button>
     <div class="diffs" id="diffs"></div>
     <div class="sizes" id="sizes"></div>
   </div>
@@ -625,6 +627,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.11.1', d:'2026-11-20', items:['🗂 問題一覧に、盤面の進み具合を小さな図で表示するようにしました','ホームの「つづき」をなくしました（問題一覧から再開できます）']},
   {v:'0.11.0', d:'2026-11-20', items:['🗂 各サイズ・難しさに100問。どの問題からでも選んで遊べます','💾 途中の問題は、数に制限なく全部そのまま残ります','💡 チェックは1問3回まで。使ってもタイムは記録されます','⟲ リセットするとタイムも0に戻ります']},
   {v:'0.10.2', d:'2026-11-20', items:['✏️ 選んだマスにメモしてある数字は、上の段の仮ボタンに色がついたままになるようにしました']},
   {v:'0.10.1', d:'2026-11-20', items:['💡チェックは何回でも使えます。使ったパズルはタイムが記録されないことを、クリア画面に表示するようにしました']},
@@ -896,17 +899,6 @@ function renderHome(){
     b.onclick = function(){ openLevels(n, d); };
     $('sizes').appendChild(b);
   })(n);
-  var pl = playing(), cb = $('contBtn');
-  if (pl.length === 1) {
-    var one = S.games[pl[0]];
-    cb.style.display = '';
-    cb.innerHTML = '▶ つづき <small>' + one.n + '×' + one.n + ' ' + DIFF[one.diff] + ' Lv.' + one.level + '</small>';
-    cb.onclick = function(){ startGame(one.n, one.diff, one.level); };
-  } else if (pl.length > 1) {
-    cb.style.display = '';
-    cb.innerHTML = '▶ つづき <small>' + pl.length + 'つから選ぶ</small>';
-    cb.onclick = openChooser;
-  } else cb.style.display = 'none';
 }
 var TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
 function openChooser(){
@@ -944,15 +936,17 @@ function openLevels(nn, d){
   $('lvStat').textContent = 'クリア ' + cl + ' / ' + LVMAX + (p.best ? '　ベスト ' + fmt(p.best) : '');
   grid.innerHTML = '';
   for (var lv = 1; lv <= LVMAX; lv++) (function(lv){
-    var b = document.createElement('button'), g = S.games[key(nn, d, lv)], sub = '', cls = '';
+    var b = document.createElement('button'), g = S.games[key(nn, d, lv)], sub = '', cls = '', th = '';
     if (g && !g.done) {
-      var f = 0, t = 0; for (var i = 0; i < g.n*g.n; i++) if (!g.p.givens[i]) { t++; if (g.vals[i]) f++; }
-      cls = 'go'; sub = '▶ ' + Math.round(f * 100 / Math.max(1, t)) + '%';
-    } else if (p.lv[lv] !== undefined) { cls = 'ok'; sub = p.lv[lv] ? fmt(p.lv[lv]) : '✓'; }
-    else if (!first) first = b;
-    if (cls === 'go' && !first) first = b;
+      cls = 'go'; sub = '▶ ' + fmt(g.time);
+      for (var i = 0; i < nn*nn; i++) th += '<i class="' + (g.p.givens[i] ? 'g' : (g.vals[i] ? 'u' : (g.memo[i] ? 'm' : ''))) + '"></i>';
+    } else if (p.lv[lv] !== undefined) {
+      cls = 'ok'; sub = p.lv[lv] ? fmt(p.lv[lv]) : '✓';
+      th = new Array(nn*nn + 1).join('<i class="f"></i>');
+    } else th = new Array(nn*nn + 1).join('<i></i>');
+    if (!first && cls !== 'ok') first = b;
     b.className = cls;
-    b.innerHTML = '<b>' + lv + '</b><small>' + sub + '</small>';
+    b.innerHTML = '<b>' + lv + '</b><div class="thumb" style="grid-template-columns:repeat(' + nn + ',1fr)">' + th + '</div><small>' + sub + '</small>';
     b.onclick = function(){ closeOv('lvOv'); startGame(nn, d, lv); };
     grid.appendChild(b);
   })(lv);
