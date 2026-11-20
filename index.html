@@ -576,6 +576,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.7.4', d:'2026-11-20', items:['🐈‍⬛ ねこが盤面の端まで行くと、ときどき下をのぞき込むようになりました']},
   {v:'0.7.3', d:'2026-11-20', items:['🐈‍⬛ ねこを小さくしました']},
   {v:'0.7.2', d:'2026-11-20', items:['🐈‍⬛ ねこは盤面の上の辺の上だけを歩くようにしました']},
   {v:'0.7.1', d:'2026-11-20', items:['🐈‍⬛ ねこの歩き方と、うれしい・おどろく・考えるなどの表情を見直しました']},
@@ -1312,10 +1313,19 @@ var CAT_SIT_B = ["#...#.....","##.##.....","#####.....","#.#.#.....","#####.....
 var CAT_TOP = ["#...#.....","##.##...#.","#####...#.","#.#.#...#.","#####...#.",".########.",".#######.."];
 var CAT_LEGS = [[".#.#..#.#.",".#.#..#.#."],[".#.#..#.#.",".#....#..."],[".#.#..#.#.",".#.#..#.#."],[".#.#..#.#.","...#....#."]];
 var CAT_WALK = CAT_LEGS.map(function(l){ return CAT_TOP.concat(l); });
+// peeking over the board edge (facing left; the first 4 columns hang over the edge, rows below 8 hang below the top edge)
+var CAT_PEEK1 = ["..............","............#.","...#...#....#.","...##.##....#.","...#####....#.","...#.########.","...#########..",".....#.#..#.#.",".....#.#..#.#."];
+var CAT_PEEK2 = ["..............","............#.","............#.","............#.","............#.",".....########.","#...########..","##.###.#..#.#.","######.#..#.#.","#.#.#.........","#####........."];
+function catPeekShut(m){ var r = m.slice(); r[9] = '#####' + r[9].slice(5); return r; }
 function catShut(m){ var r = m.slice(); r[3] = '#####' + r[3].slice(5); return r; }
 function catEarsBack(m){ var r = m.slice(); r[0] = '..........'; r[1] = '#...#' + r[1].slice(5); return r; }
-var CAT = {on:false, sc:2, x:0, maxX:0, dir:-1, to:0, state:'sit', tail:0, frame:0, tick:0, blink:0, react:null, last:Date.now()};
+var CAT = {on:false, sc:2, peekT:0, x:0, maxX:0, dir:-1, to:0, state:'sit', tail:0, frame:0, tick:0, blink:0, react:null, last:Date.now()};
 function catSprite(){
+  if (CAT.state === 'peek') {
+    var p = CAT.peekT;
+    if (p < 3 || p >= 15) return CAT_PEEK1;
+    return (p === 9) ? catPeekShut(CAT_PEEK2) : CAT_PEEK2;
+  }
   if (CAT.state === 'walk') return CAT_WALK[CAT.frame];
   if (CAT.react) return CAT.react.m;
   if (CAT.state === 'sleep') return catShut(CAT_SIT_B);
@@ -1325,10 +1335,14 @@ function catSprite(){
 }
 function catDraw(){
   if (!CAT.on) return;
-  var m = catSprite(), flip = CAT.dir > 0, w = 10, h = 9, s = '<svg width="' + w*CAT.sc + '" height="' + h*CAT.sc + '" viewBox="0 0 ' + w + ' ' + h + '">';
-  for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) if (m[y][x] === '#') s += '<rect x="' + (flip ? w-1-x : x) + '" y="' + y + '" width="1.02" height="1.02"/>';
+  var m = catSprite(), flip = CAT.dir > 0, h = m.length, w = 0;
+  for (var i = 0; i < h; i++) w = Math.max(w, m[i].length);
+  var over = CAT.state === 'peek' ? 4 : 0;   // columns hanging over the edge
+  var s = '<svg width="' + w*CAT.sc + '" height="' + h*CAT.sc + '" viewBox="0 0 ' + w + ' ' + h + '">';
+  for (var y = 0; y < h; y++) for (var x = 0; x < m[y].length; x++) if (m[y][x] === '#') s += '<rect x="' + (flip ? w-1-x : x) + '" y="' + y + '" width="1.02" height="1.02"/>';
   $('catSp').innerHTML = s + '</svg>';
-  $('catBox').style.left = CAT.x + 'px';
+  $('catBox').style.left = (CAT.x - (flip ? 0 : over * CAT.sc)) + 'px';
+  $('catBox').style.bottom = (-(h - 9) * CAT.sc) + 'px';
 }
 function catLayout(gap, width, bottom, left){
   var st = $('catStage');
@@ -1357,7 +1371,7 @@ function catPoke(kind){
   catWake();
   if (CAT.state === 'party') return;
   if (kind === 'party') { CAT.state = 'party'; CAT.react = null; catFx('♪', true); catDraw(); return; }
-  if (CAT.state === 'walk') CAT.state = 'sit';
+  if (CAT.state === 'walk' || CAT.state === 'peek') CAT.state = 'sit';
   if (kind === 'hop') catReact(catShut(CAT_SIT_A), '♪', 5);
   else if (kind === 'shock') catReact(catEarsBack(CAT_SIT_A), '!', 6);
   else if (kind === 'think') catReact(catShut(CAT_SIT_B), '?', 7);
@@ -1375,14 +1389,21 @@ setInterval(function(){  // one tick = 180 ms
     if (CAT.tick % 5 === 0) { CAT.tail ^= 1; redraw = true; }
     if (CAT.tick % 23 === 0) { CAT.blink = 1; redraw = true; }
     if (Math.random() < 0.02 && CAT.maxX > 30) {
-      var to = Math.round(Math.random() * CAT.maxX / CAT.sc) * CAT.sc;
+      var r = Math.random(), to = r < 0.2 ? 0 : r < 0.4 ? CAT.maxX : Math.round(Math.random() * CAT.maxX / CAT.sc) * CAT.sc;
       if (Math.abs(to - CAT.x) >= 6 * CAT.sc) { CAT.to = to; CAT.dir = to > CAT.x ? 1 : -1; CAT.state = 'walk'; CAT.frame = 0; redraw = true; }
     }
   } else if (CAT.state === 'walk' && CAT.tick % 2 === 0) {   // a frame every 360 ms, one pixel every other frame
     CAT.frame = (CAT.frame + 1) % 4;
     if (CAT.frame % 2 === 1) CAT.x += CAT.dir * CAT.sc;
-    if ((CAT.dir > 0 && CAT.x >= CAT.to) || (CAT.dir < 0 && CAT.x <= CAT.to)) { CAT.x = CAT.to; CAT.state = 'sit'; CAT.frame = 0; }
+    if ((CAT.dir > 0 && CAT.x >= CAT.to) || (CAT.dir < 0 && CAT.x <= CAT.to)) {
+      CAT.x = CAT.to; CAT.frame = 0;
+      var atEdge = (CAT.dir < 0 && CAT.x <= 0) || (CAT.dir > 0 && CAT.x >= CAT.maxX);
+      if (atEdge && Math.random() < 0.6) { CAT.state = 'peek'; CAT.peekT = 0; } else CAT.state = 'sit';
+    }
     redraw = true;
+  } else if (CAT.state === 'peek' && CAT.tick % 2 === 0) {
+    CAT.peekT++; redraw = true;
+    if (CAT.peekT >= 18) CAT.state = 'sit';
   } else if (CAT.state === 'party' && CAT.tick % 2 === 0) redraw = true;
   if (redraw) catDraw();
 }, 180);
