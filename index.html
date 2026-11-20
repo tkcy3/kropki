@@ -576,6 +576,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.7.1', d:'2026-11-20', items:['🐈‍⬛ ねこの歩き方と、うれしい・おどろく・考えるなどの表情を見直しました']},
   {v:'0.7.0', d:'2026-11-20', items:['🐈‍⬛ ねこが新しくなりました。コマ送りで座ったり歩いたりします']},
   {v:'0.6.2', d:'2026-11-20', items:['🐈 画面が小さいときも、ねこがいられるようにしました']},
   {v:'0.6.1', d:'2026-11-20', items:['🐈 ねこを小さくしました']},
@@ -1303,19 +1304,26 @@ function goHome(){ TUT = null; HINT = null; clearMark(); clearMsg(); save(true);
 $('gBack').onclick = function(){ if (TUT) exitTut(); else goHome(); };
 
 /* ---------- the cat (lives in the empty band above the board) ----------
-   Tamagotchi-like: two-frame flips and pixel-step moves, no smooth motion. */
+   Tamagotchi-like: frame flips and pixel-step moves only. Never jumps. */
 var CAT_SIT_A = ["#...#.....","##.##.....","#####.....","#.#.#.....","#####..#..",".###...#..",".####..#..","######.#..","########.."];
 var CAT_SIT_B = ["#...#.....","##.##.....","#####.....","#.#.#.....","#####.....",".###......",".####.....","#######...","########.."];
-var CAT_WALK_A = [".........","#...#.....","##.##...##","#####....#","#.#.#....#","#####...#.",".#######..",".#######..",".#.#..#.#."];
-var CAT_WALK_B = CAT_WALK_A.slice(0, 8).concat(["..#.#.#.#."]);
-function catShut(m){ var r = m.slice(); for (var i = 0; i < r.length; i++) if (r[i].indexOf('#.#.#') === 0) { r[i] = '#####' + r[i].slice(5); break; } return r; }
-var CAT = {on:false, sc:3, x:0, maxX:0, dir:-1, to:0, state:'sit', tail:0, frame:0, tick:0, blink:0, last:Date.now()};
+var CAT_TOP = ["#...#.....","##.##...#.","#####...#.","#.#.#...#.","#####...#.",".########.",".#######.."];
+var CAT_LEGS = [[".#.#..#.#.",".#.#..#.#."],[".#.#..#.#.",".#....#..."],[".#.#..#.#.",".#.#..#.#."],[".#.#..#.#.","...#....#."]];
+var CAT_WALK = CAT_LEGS.map(function(l){ return CAT_TOP.concat(l); });
+function catShut(m){ var r = m.slice(); r[3] = '#####' + r[3].slice(5); return r; }
+function catEarsBack(m){ var r = m.slice(); r[0] = '..........'; r[1] = '#...#' + r[1].slice(5); return r; }
+var CAT = {on:false, sc:3, x:0, maxX:0, dir:-1, to:0, state:'sit', tail:0, frame:0, tick:0, blink:0, react:null, last:Date.now()};
+function catSprite(){
+  if (CAT.state === 'walk') return CAT_WALK[CAT.frame];
+  if (CAT.react) return CAT.react.m;
+  if (CAT.state === 'sleep') return catShut(CAT_SIT_B);
+  if (CAT.state === 'party') return CAT.tick % 2 ? catShut(CAT_SIT_B) : CAT_SIT_A;
+  var m = CAT.tail ? CAT_SIT_B : CAT_SIT_A;
+  return CAT.blink > 0 ? catShut(m) : m;
+}
 function catDraw(){
-  var m;
-  if (CAT.state === 'walk') m = CAT.frame ? CAT_WALK_B : CAT_WALK_A;
-  else m = CAT.tail ? CAT_SIT_B : CAT_SIT_A;
-  if (CAT.state === 'sleep' || CAT.blink > 0) m = catShut(m);
-  var flip = CAT.dir > 0, w = 10, h = 9, s = '<svg width="' + w*CAT.sc + '" height="' + h*CAT.sc + '" viewBox="0 0 ' + w + ' ' + h + '">';
+  if (!CAT.on) return;
+  var m = catSprite(), flip = CAT.dir > 0, w = 10, h = 9, s = '<svg width="' + w*CAT.sc + '" height="' + h*CAT.sc + '" viewBox="0 0 ' + w + ' ' + h + '">';
   for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) if (m[y][x] === '#') s += '<rect x="' + (flip ? w-1-x : x) + '" y="' + y + '" width="1.02" height="1.02"/>';
   $('catSp').innerHTML = s + '</svg>';
   $('catBox').style.left = CAT.x + 'px';
@@ -1334,44 +1342,46 @@ function catFx(txt, loop){
   var f = $('catFx'); f.textContent = txt || ''; f.className = '';
   if (!txt) return; void f.offsetWidth; f.className = loop ? 'loop' : 'on';
 }
-function catAnim(cls){ var b = $('catBody'); b.className = ''; void b.offsetWidth; if (cls) b.className = cls; }
+function catReact(m, fx, ticks){ CAT.react = {m:m, until:CAT.tick + ticks}; catFx(fx); catDraw(); }
 function catWake(){
   CAT.last = Date.now();
-  if (CAT.state === 'sleep') { CAT.state = 'sit'; catFx(''); if (CAT.on) catDraw(); }
+  if (CAT.state === 'sleep') { CAT.state = 'sit'; catFx(''); catDraw(); }
 }
 function catPoke(kind){
-  if (kind === 'reset') { CAT.state = 'sit'; CAT.last = Date.now(); catAnim(''); catFx(''); if (CAT.on) catDraw(); return; }
+  if (kind === 'reset') { CAT.state = 'sit'; CAT.react = null; CAT.last = Date.now(); catFx(''); catDraw(); return; }
   if (!CAT.on) { CAT.last = Date.now(); return; }
   catWake();
   if (CAT.state === 'party') return;
-  if (kind === 'party') { CAT.state = 'party'; catAnim('party'); catFx('♪', true); catDraw(); return; }
-  if (CAT.state === 'walk') { CAT.state = 'sit'; catDraw(); }
-  if (kind === 'hop') catAnim('hop');
-  else if (kind === 'shock') { catAnim('shock'); catFx('!'); }
-  else if (kind === 'think') { CAT.blink = 3; catDraw(); catFx('?'); }
-  else if (kind === 'pet') { catAnim('hop'); catFx('♪'); }
+  if (kind === 'party') { CAT.state = 'party'; CAT.react = null; catFx('♪', true); catDraw(); return; }
+  if (CAT.state === 'walk') CAT.state = 'sit';
+  if (kind === 'hop') catReact(catShut(CAT_SIT_A), '♪', 5);
+  else if (kind === 'shock') catReact(catEarsBack(CAT_SIT_A), '!', 6);
+  else if (kind === 'think') catReact(catShut(CAT_SIT_B), '?', 7);
+  else if (kind === 'pet') catReact(catShut(CAT_SIT_A), '♡', 6);
 }
 $('catBox').addEventListener('pointerdown', function(){ catPoke('pet'); });
-setInterval(function(){  // one tick = 150 ms
+setInterval(function(){  // one tick = 180 ms
   if (!CAT.on || !$('game').classList.contains('on') || document.hidden) return;
   CAT.tick++;
   var redraw = false;
+  if (CAT.react && CAT.tick >= CAT.react.until) { CAT.react = null; redraw = true; }
   if (CAT.blink > 0) { CAT.blink--; redraw = true; }
-  if (CAT.state === 'sit') {
+  if (CAT.state === 'sit' && !CAT.react) {
     if (Date.now() - CAT.last > 25000) { CAT.state = 'sleep'; catFx('z', true); catDraw(); return; }
-    if (CAT.tick % 6 === 0) { CAT.tail ^= 1; redraw = true; }
-    if (Math.random() < 0.02) { CAT.blink = 1; redraw = true; }
-    if (Math.random() < 0.025 && CAT.maxX > 30) {
+    if (CAT.tick % 5 === 0) { CAT.tail ^= 1; redraw = true; }
+    if (CAT.tick % 23 === 0) { CAT.blink = 1; redraw = true; }
+    if (Math.random() < 0.02 && CAT.maxX > 30) {
       var to = Math.round(Math.random() * CAT.maxX / CAT.sc) * CAT.sc;
-      if (Math.abs(to - CAT.x) >= 6 * CAT.sc) { CAT.to = to; CAT.dir = to > CAT.x ? 1 : -1; CAT.state = 'walk'; redraw = true; }
+      if (Math.abs(to - CAT.x) >= 6 * CAT.sc) { CAT.to = to; CAT.dir = to > CAT.x ? 1 : -1; CAT.state = 'walk'; CAT.frame = 0; redraw = true; }
     }
-  } else if (CAT.state === 'walk' && CAT.tick % 2 === 0) {
-    CAT.frame ^= 1; CAT.x += CAT.dir * CAT.sc;
-    if ((CAT.dir > 0 && CAT.x >= CAT.to) || (CAT.dir < 0 && CAT.x <= CAT.to)) { CAT.x = CAT.to; CAT.state = 'sit'; }
+  } else if (CAT.state === 'walk' && CAT.tick % 2 === 0) {   // a frame every 360 ms, one pixel every other frame
+    CAT.frame = (CAT.frame + 1) % 4;
+    if (CAT.frame % 2 === 1) CAT.x += CAT.dir * CAT.sc;
+    if ((CAT.dir > 0 && CAT.x >= CAT.to) || (CAT.dir < 0 && CAT.x <= CAT.to)) { CAT.x = CAT.to; CAT.state = 'sit'; CAT.frame = 0; }
     redraw = true;
-  } else if (CAT.state === 'party' && CAT.tick % 3 === 0) { CAT.tail ^= 1; redraw = true; }
+  } else if (CAT.state === 'party' && CAT.tick % 2 === 0) redraw = true;
   if (redraw) catDraw();
-}, 150);
+}, 180);
 
 /* ---------- timer ---------- */
 function updateTime(){ $('gTime').textContent = (G && S.set.timer) ? '⏱ ' + fmt(G.time) : ''; }
