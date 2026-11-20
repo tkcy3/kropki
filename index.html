@@ -307,6 +307,7 @@ button.plain{padding:8px 12px;font-size:15px}
   <div class="row">BGM<div class="seg" data-k="bgm"><button data-v="0">OFF</button><button data-v="1">小</button><button data-v="2">中</button><button data-v="3">大</button></div></div>
   <div class="row">ねこ<div class="seg" data-k="cat"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">タイマー<div class="seg" data-k="timer"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
+  <div class="row">プレイ記録を送る<div class="seg" data-k="share"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">記録<span id="statLine" style="font-size:15px;color:var(--muted)"></span></div>
   <button class="row rowBtn" id="stVer"><span>📋 更新内容<span class="newb" id="stVerNew">NEW</span></span><span class="rs">v<span id="stVerNo"></span> ›</span></button>
   <div class="row" id="a2hRow">ホーム画面に追加<button class="plain" id="a2hSet">📲 追加 ›</button></div>
@@ -635,6 +636,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.14.0', d:'2026-11-21', items:['📝 クリアの記録を作者のスプレッドシートに送るようにしました（設定の「プレイ記録を送る」でオフにできます）']},
   {v:'0.13.4', d:'2026-11-21', items:['4×4〜6×6 の仮置きボタンの数字を大きくしました','ホームの🏆表示をなくしました']},
   {v:'0.13.3', d:'2026-11-21', items:['難しさボタンの文字の左右に、ゆとりを持たせました（「むずかしい」は「難しい」に）']},
   {v:'0.13.2', d:'2026-11-21', items:['🏠 ホーム画面を、画面いっぱいに使うレイアウトにしました（サイズごとのクリア数をバーで表示）']},
@@ -709,7 +711,7 @@ var KEY = 'kropki-save-v1';
 var S = null;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
 if (!S || typeof S !== 'object') S = {};
-function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1, cat:1, bgm:1}; }
+function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1, cat:1, bgm:1, share:1}; }
 S.set = Object.assign(defaultSet(), S.set || {});
 S.prog = S.prog || {};
 if (!S.set.calm) { S.set.calm = 1; S.set.theme = 'light'; }
@@ -1491,6 +1493,20 @@ function after(){
 }
 
 /* ---------- clear ---------- */
+/* ---------- play log: one row per clear, sent to the author's Google Form (→ the shared spreadsheet, sheet "KROPKI").
+   Can be turned off in settings. ---------- */
+var SHARE_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdb6AFxbzrsyIZBSucBamai7MQHQTCh4jB25y4Devo73FCrhw/formResponse', SHARE_ENTRY = 'entry.738132187';
+function devId(){ if (!S.dev) { S.dev = Math.random().toString(36).slice(2, 10); save(); } return S.dev; }
+function shareClear(t, replay){
+  if (!S.set.share || !G || G.tut) return;
+  try {
+    var und = 0; for (var k in S.prog) und += S.prog[k].cnt || 0;
+    var d = {v:VERSION, id:devId(), ev:'clear', size:n, diff:DIFF[G.diff], lv:G.level, sec:t, chk:G.chk || 0, replay:replay ? 1 : 0, clears:und, app:isApp() ? 1 : 0};
+    var body = new URLSearchParams(); body.append(SHARE_ENTRY, JSON.stringify(d));
+    var ok = false; try { ok = navigator.sendBeacon && navigator.sendBeacon(SHARE_URL, body); } catch(e) {}
+    if (!ok) fetch(SHARE_URL, {method:'POST', mode:'no-cors', body:body, keepalive:true}).catch(function(){});
+  } catch(e) {}
+}
 function win(){
   G.done = true; G.sel = -1; catPoke('party');
   if (G.tut) {
@@ -1508,6 +1524,7 @@ function win(){
   p.cnt = (p.cnt || 0) + 1;
   if (G.level > p.c) p.c = G.level;
   var t = Math.floor(G.time), lb = p.lv[G.level];
+  shareClear(t, lb !== undefined);
   if (lb === undefined) rec = '';
   else if (!lb || t < lb) rec = '🏆 この問題のベスト更新！';
   if (lb === undefined || !lb || t < lb) p.lv[G.level] = t;
