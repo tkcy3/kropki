@@ -630,6 +630,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.12.4', d:'2026-11-20', items:['🐈 ネコの♪もドット絵にしました']},
   {v:'0.12.3', d:'2026-11-20', items:['🐈 クリアのときの♪も、最後に右上へ1ドット動くようにしました']},
   {v:'0.12.2', d:'2026-11-20', items:['長いお知らせが画面からはみ出さないようにしました','💡チェックの残り回数を、アイコンの右上に表示するようにしました']},
   {v:'0.12.1', d:'2026-11-20', items:['📋 コピー中の案内を1行にして、盤面の下の行が隠れないようにしました']},
@@ -1557,14 +1558,17 @@ function catLayout(gap, width, bottom, left){
 }
 var catFxT = null;
 var CAT_HEART = [".##.##.","#..#..#","#.....#",".#...#.","..#.#..","...#..."];
+var CAT_NOTE = ["..#..","..##.","..#.#","..#..","###..","##..."];
+var CAT_NOTE2 = ["..#####","..#...#","..#...#","..#...#","###.###","##..##."];
+var CAT_PIXFX = {"♡":CAT_HEART, "♪":CAT_NOTE, "♪♪":CAT_NOTE2};
+function fxSet(f, txt){ if (CAT_PIXFX[txt]) f.innerHTML = catPix(CAT_PIXFX[txt]); else f.textContent = txt || ""; }
 function catPix(m){
   var w = m[0].length, h = m.length, s = '<svg width="' + w*CAT.sc + '" height="' + h*CAT.sc + '" viewBox="0 0 ' + w + ' ' + h + '" style="display:block;shape-rendering:crispEdges">';
   for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) if (m[y][x] === '#') s += '<rect x="' + x + '" y="' + y + '" width="1.02" height="1.02" fill="var(--catInk)"/>';
   return s + '</svg>';
 }
 function catFx(txt, loop){
-  var f = $('catFx'); clearTimeout(catFxT); f.textContent = txt || ''; f.className = '';
-  if (txt === '♡') f.innerHTML = catPix(CAT_HEART);
+  var f = $('catFx'); clearTimeout(catFxT); fxSet(f, txt); f.className = '';
   if (!txt) return; void f.offsetWidth;
   f.style.transform = '';
   if (!loop) {
@@ -1575,7 +1579,7 @@ function catFx(txt, loop){
       catFxT = setTimeout(function(){ f.textContent = ''; f.className = ''; f.style.transform = ''; }, 1100);
     }, 1100);
   }
-  else f.className = 'snore';
+  else f.className = loop === 'party' ? '' : 'snore';   // only the snore is faint
 }
 function catReact(m, fx, ticks){ CAT.react = {m:m, until:CAT.tick + ticks}; catFx(fx); catDraw(); }
 function catWake(){
@@ -1587,7 +1591,7 @@ function catPoke(kind){
   if (!CAT.on) { CAT.last = Date.now(); return; }
   catWake();
   if (CAT.state === 'party') return;
-  if (kind === 'party') { CAT.state = 'party'; CAT.react = null; catFx('♪', true); catDraw(); return; }
+  if (kind === 'party') { CAT.state = 'party'; CAT.react = null; catFx('♪', 'party'); catDraw(); return; }
   if (CAT.state === 'walk' || CAT.state === 'peek') CAT.state = 'sit';
   if (kind === 'hop') catReact(catShut(CAT_SIT_A), '♪', 5);
   else if (kind === 'shock') catReact(catEarsBack(CAT_SIT_A), '!', 6);
@@ -1610,7 +1614,7 @@ setInterval(function(){  // one tick = 180 ms
   }
   if (CAT.state === 'party' && CAT.tick % 4 === 0) {   // ♪ → ♪♪ → then one dot up-right, like the snore
     var kp = (CAT.tick / 4) % 3, fp = $('catFx');
-    fp.textContent = kp ? '♪♪' : '♪';
+    fxSet(fp, kp ? '♪♪' : '♪');
     fp.style.transform = kp === 2 ? 'translate(' + CAT.sc + 'px,' + (-CAT.sc) + 'px)' : '';
   }
   if (CAT.blink > 0) { CAT.blink--; redraw = true; }
