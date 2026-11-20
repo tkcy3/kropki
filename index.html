@@ -35,26 +35,28 @@ button:active{transform:scale(.95)}
 .screen.on{display:flex}
 
 /* ---------- home ---------- */
-#home{align-items:center}
-.logo{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:64px 0 16px}
+#home{align-items:stretch}
+.logo{flex:none;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:62px 0 14px}
 .logo h1{margin:0;font-size:46px;letter-spacing:6px;font-weight:900;color:var(--fg)}
 .logo .dots{display:flex;justify-content:center;gap:14px;margin-top:10px}
 .logo .dots i{width:16px;height:16px;border-radius:50%;border:3px solid var(--fg);display:block;background:#fff}
 .logo .dots i.b{background:#000}
 .homeTop{position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:10px;display:flex;gap:8px}
 .icoBtn{width:48px;height:48px;font-size:22px;display:flex;align-items:center;justify-content:center;padding:0}
-.homeBody{flex:none;width:100%;max-width:520px;padding:0 14px 18px}
+.homeBody{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:520px;margin:0 auto;padding:0 14px 16px}
 .cont{width:100%;padding:14px;font-size:22px;font-weight:700;margin-bottom:16px;border-color:var(--num);background:var(--num);color:var(--numTx);display:flex;align-items:center;justify-content:center;gap:10px}
 .cont small{font-size:15px;font-weight:400;color:var(--numTx);opacity:.85}
 .diffs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-.diffs button{padding:10px 2px;font-size:16px;font-weight:700;line-height:1.25;border-color:var(--btn);color:var(--muted);background:var(--panel)}
+.diffs button{padding:10px 0;font-size:15px;font-weight:700;line-height:1.25;border-color:var(--btn);color:var(--muted);background:var(--panel);white-space:nowrap;letter-spacing:-.5px;overflow:hidden}
 .diffs button span{display:block;font-size:13px;letter-spacing:1px}
 .diffs button.on{border-color:var(--num);background:var(--num);color:var(--numTx)}
-.sizes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.sizes button{height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--panel);border-color:var(--btn)}
-.sizes b{font-size:30px;font-weight:900}
-.sizes small{font-size:15px;color:var(--muted)}
-.sizes small.go{color:var(--accent)}
+.sizes{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:minmax(96px,1fr);gap:10px}
+.sizes button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--panel);border-color:var(--btn);padding:8px}
+.sizes b{font-size:38px;font-weight:900;line-height:1}
+.sizes .pb{width:72%;height:7px;border-radius:4px;background:var(--line);overflow:hidden}
+.sizes .pb i{display:block;height:100%;background:var(--good);border-radius:4px}
+.sizes small{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sizes .go{position:absolute;top:8px;right:10px;font-size:13px;font-weight:800;color:var(--accent)}
 
 /* ---------- game ---------- */
 .bar{display:flex;align-items:center;gap:8px;padding:8px var(--side);height:62px}
@@ -208,7 +210,7 @@ button:active{transform:scale(.95)}
 button.plain{padding:8px 12px;font-size:15px}
 .closeBtn{width:100%;height:56px;font-size:20px;font-weight:700;margin-top:14px}
 .ver{color:var(--muted);font-size:14px;text-align:center;margin-top:10px}
-#ver{font-size:14px;color:var(--muted);margin-top:14px;background:none;border:0;padding:6px 10px}
+#ver{font-size:14px;color:var(--muted);margin-top:8px;background:none;border:0;padding:6px 10px}
 #ver.new{color:var(--accent);font-weight:700}
 .rowBtn{width:100%;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.25);border-radius:0;text-align:left;color:var(--fg)}
 .rowBtn .rs{color:var(--muted);font-size:15px}
@@ -259,7 +261,7 @@ button.plain{padding:8px 12px;font-size:15px}
     <h1>KROPKI</h1>
     <div class="dots"><i></i><i class="b"></i><i></i><i class="b"></i></div>
     <button id="ver"></button>
-    <div id="homeStat" style="margin-top:14px;font-size:18px;color:var(--muted)"></div>
+    <div id="homeStat" style="margin-top:2px;font-size:17px;color:var(--muted)"></div>
     <div id="a2hChip" class="hidden"><button id="a2hGo"><span>📲</span><b>ホーム画面に追加<small>全画面ですぐ遊べる</small></b><i>›</i></button><button id="a2hX" aria-label="閉じる">✕</button></div>
   </div>
   <div class="homeBody">
@@ -630,6 +632,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.13.2', d:'2026-11-21', items:['🏠 ホーム画面を、画面いっぱいに使うレイアウトにしました（サイズごとのクリア数をバーで表示）']},
   {v:'0.13.1', d:'2026-11-20', items:['🐈 クリアした問題を開いたときも、ネコが♪で歌っています']},
   {v:'0.13.0', d:'2026-11-20', items:['🖼 クリアした問題は、開くと解き終わった盤面がそのまま見られます。リセットを押すと最初から解き直せます','解き直し中の問題も、一覧で緑のまま表示します']},
   {v:'0.12.6', d:'2026-11-20', items:['🐈 ♪♪の2つ目を1ドット左に寄せました']},
@@ -906,8 +909,9 @@ function renderHome(){
   });
   $('sizes').innerHTML = '';
   for (var n = 4; n <= 9; n++) (function(n){
-    var p = prog(n, d), ip = inProg(n, d).length, b = document.createElement('button');
-    b.innerHTML = '<b>' + n + '×' + n + '</b><small class="' + (ip ? 'go' : '') + '">' + (ip ? '▶ ' : '') + Object.keys(p.lv).length + ' / ' + LVMAX + '</small>';
+    var p = prog(n, d), ip = inProg(n, d).length, cl = Object.keys(p.lv).length, b = document.createElement('button');
+    b.innerHTML = (ip ? '<span class="go">▶ ' + ip + '</span>' : '') + '<b>' + n + '×' + n + '</b>' +
+      '<div class="pb"><i style="width:' + (cl * 100 / LVMAX) + '%"></i></div><small>' + cl + ' / ' + LVMAX + '</small>';
     b.onclick = function(){ openLevels(n, d); };
     $('sizes').appendChild(b);
   })(n);
