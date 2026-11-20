@@ -587,6 +587,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.6.2', d:'2026-11-20', items:['🐈 画面が小さいときも、ねこがいられるようにしました']},
   {v:'0.6.1', d:'2026-11-20', items:['🐈 ねこを小さくしました']},
   {v:'0.6.0', d:'2026-11-20', items:['🐈 盤面の上に、ドットのねこがやってきました（設定でOFFにできます）']},
   {v:'0.5.3', d:'2026-11-20', items:['確認のボタンを「はい／いいえ」にしました']},
@@ -897,7 +898,8 @@ function layout(){
   var w = $('boardWrap'), cs0 = getComputedStyle(w);
   var W = w.clientWidth - parseFloat(cs0.paddingLeft) - parseFloat(cs0.paddingRight);
   var H = w.clientHeight - parseFloat(cs0.paddingTop) - parseFloat(cs0.paddingBottom);
-  var S0 = Math.floor(Math.max(120, Math.min(W, H)));
+  // keep a small band above the board for the cat (shrinks the board a little only on short screens)
+  var CATBAND = 32, S0 = Math.floor(Math.max(120, Math.min(W, S.set.cat ? H - CATBAND : H)));
   var g = 2, unit = (S0 - 6 + g) / n, P = [];
   for (var k = 0; k <= n; k++) P.push(Math.round(k * unit));
   var cs = unit - g;
@@ -1322,7 +1324,7 @@ function catSvg(map){
 function catDraw(){ $('catSp').innerHTML = catSvg(CAT.state === 'sleep' ? CAT_SLEEP : CAT_AWAKE); }
 function catLayout(gap, width, bottom){
   var st = $('catStage');
-  CAT.on = !!S.set.cat && gap >= 34;
+  CAT.on = !!S.set.cat && gap >= 26;
   st.style.display = CAT.on ? '' : 'none';
   if (!CAT.on) return;
   st.style.height = gap + 'px'; st.style.bottom = bottom + 'px'; st.style.top = 'auto';
