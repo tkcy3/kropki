@@ -86,7 +86,7 @@ button:active{transform:scale(.95)}
 #catBody.shock{animation:catShock .48s steps(1)}
 @keyframes catShock{0%{transform:translate(0,-3px)}25%{transform:translate(-3px,0)}50%{transform:translate(3px,0)}75%{transform:translate(-3px,0)}100%{transform:translate(0,0)}}
 #catBox::before{content:'';position:absolute;left:-14px;right:-14px;top:-16px;bottom:-6px}
-#catFx{position:absolute;left:85%;top:-17px;font-size:15px;font-weight:800;line-height:1;color:var(--catInk);pointer-events:none;white-space:nowrap}
+#catFx{position:absolute;left:30%;top:-11px;font-size:14px;font-weight:800;line-height:1;color:var(--catInk);pointer-events:none;white-space:nowrap}
 #catFx.on{animation:catFx 1.8s steps(1) forwards}
 #catFx.snore{opacity:.4;font-weight:700}
 @keyframes catFx{0%{transform:translate(0,0)}35%{transform:translate(2px,-3px)}70%{transform:translate(4px,-6px)}100%{transform:translate(4px,-6px)}}
@@ -578,7 +578,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
-  {v:'0.8.1', d:'2026-11-20', items:['🐈‍⬛ スマホの「アニメーションを減らす」設定がONでも、ねこをタップすると「♡」が出るようにしました','🐈‍⬛ 寝息を「zzz」と小さめの文字で、薄く表示するようにしました']},
+  {v:'0.8.1', d:'2026-11-20', items:['🐈‍⬛ スマホの「アニメーションを減らす」設定がONでも、ねこをタップすると「♡」が出るようにしました','🐈‍⬛ 寝息を「zzz」と小さめの文字で、薄く表示するようにしました','🐈‍⬛ 「♡」や寝息を、ねこの頭のすぐ上に出すようにしました']},
   {v:'0.8.0', d:'2026-11-20', items:['🐈‍⬛ ねこの「♡」や寝息「zZ」を大きく見やすくしました。ねこをタップしやすくしました']},
   {v:'0.7.9', d:'2026-11-20', items:['ホーム画面のアイコンを新しくしました']},
     {v:'0.7.8', d:'2026-11-20', items:['ミス表示「ルール」で、正しい数字まで赤くなっていたのを直しました。赤くなるのは間違っている数字だけです']},
@@ -1360,6 +1360,8 @@ function catDraw(){
   $('catSp').innerHTML = s + '</svg>';
   $('catBox').style.left = (CAT.x - (flip ? 0 : over * CAT.sc)) + 'px';
   $('catBox').style.bottom = (-(h - 9) * CAT.sc) + 'px';
+  var headX = CAT.state === 'peek' ? (flip ? 0.85 : 0.15) : (flip ? 0.75 : 0.35);
+  $('catFx').style.left = Math.round(w * CAT.sc * headX) + 'px';
 }
 function catLayout(gap, width, bottom, left){
   var st = $('catStage');
