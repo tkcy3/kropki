@@ -576,6 +576,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.7.2', d:'2026-11-20', items:['🐈‍⬛ ねこは盤面の上の辺の上だけを歩くようにしました']},
   {v:'0.7.1', d:'2026-11-20', items:['🐈‍⬛ ねこの歩き方と、うれしい・おどろく・考えるなどの表情を見直しました']},
   {v:'0.7.0', d:'2026-11-20', items:['🐈‍⬛ ねこが新しくなりました。コマ送りで座ったり歩いたりします']},
   {v:'0.6.2', d:'2026-11-20', items:['🐈 画面が小さいときも、ねこがいられるようにしました']},
@@ -898,7 +899,7 @@ function layout(){
   b.style.setProperty('--cs', cs + 'px');
   b.style.setProperty('--fz', S.set.big ? .92 : .74);
   b.style.setProperty('--mz', S.set.big ? .29 : .26);
-  catLayout(H + parseFloat(cs0.paddingTop) - S0, W, S0 + parseFloat(cs0.paddingBottom));
+  catLayout(H + parseFloat(cs0.paddingTop) - S0, S0, S0 + parseFloat(cs0.paddingBottom), (w.clientWidth - S0) / 2);
   function lo(c){ return P[c]; } function sz(c){ return P[c+1] - g - P[c]; }
   for (var i = 0; i < N; i++) {
     var r = Math.floor(i/n), c = i%n, el = cellEls[i];
@@ -1328,12 +1329,14 @@ function catDraw(){
   $('catSp').innerHTML = s + '</svg>';
   $('catBox').style.left = CAT.x + 'px';
 }
-function catLayout(gap, width, bottom){
+function catLayout(gap, width, bottom, left){
   var st = $('catStage');
   CAT.on = !!S.set.cat && gap >= 26;
   st.style.display = CAT.on ? '' : 'none';
   if (!CAT.on) return;
+  // the cat only walks along the top edge of the board
   st.style.height = gap + 'px'; st.style.bottom = bottom + 'px'; st.style.top = 'auto';
+  st.style.left = left + 'px'; st.style.right = 'auto'; st.style.width = width + 'px';
   CAT.maxX = Math.max(0, Math.floor((width - 10*CAT.sc) / CAT.sc) * CAT.sc);
   if (CAT.x > CAT.maxX) CAT.x = CAT.maxX;
   catDraw();
