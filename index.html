@@ -302,7 +302,7 @@ button.plain{padding:8px 12px;font-size:15px}
 <!-- CONFIRM -->
 <div class="ov" id="cfOv" style="align-items:center"><div class="sheet" style="border-radius:20px;width:min(92vw,400px);border:2px solid var(--btn)">
   <h2 id="cfMsg"></h2>
-  <div style="display:flex;gap:10px"><button class="closeBtn" data-close style="flex:1">やめる</button><button class="closeBtn" id="cfYes" style="flex:1;border-color:var(--err);color:var(--err)">OK</button></div>
+  <div style="display:flex;gap:10px"><button class="closeBtn" data-close style="flex:1">いいえ</button><button class="closeBtn" id="cfYes" style="flex:1;border-color:var(--err);color:var(--err)">はい</button></div>
 </div></div>
 
 <!-- CLEAR -->
@@ -560,6 +560,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.5.3', d:'2026-11-20', items:['確認のボタンを「はい／いいえ」にしました']},
   {v:'0.5.2', d:'2026-11-20', items:['📋 更新内容の見せ方を新しくしました']},
   {v:'0.5.1', d:'2026-11-20', items:['ホーム画面のタイトルを、上下のまん中に置きました']},
   {v:'0.5.0', d:'2026-11-20', items:['📲 ホーム画面に追加できるようにしました（設定から）。全画面ですぐ遊べます','設定に「すべて初期化」を追加しました']},
