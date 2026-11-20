@@ -164,6 +164,16 @@ button:active{transform:scale(.95)}
 .slotDel{flex:none;width:52px;padding:0;display:flex;align-items:center;justify-content:center;color:var(--err);border-color:var(--btn)}
 .slotDel svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .hidden{display:none!important}
+#instOv{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px 20px calc(24px + env(safe-area-inset-bottom))}
+.instBox{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.instIcon{width:96px;height:96px;border-radius:22px;box-shadow:0 4px 14px rgba(0,0,0,.15);margin-bottom:14px}
+.instBox h1{margin:0 0 18px;font-size:30px;letter-spacing:4px;font-weight:900}
+.instLead{margin:0 0 10px;font-size:20px;font-weight:700;line-height:1.5}
+.instSub{margin:0 0 26px;font-size:15px;color:var(--muted);line-height:1.6}
+.instGo{width:100%;height:62px;font-size:21px;font-weight:800;background:var(--num);border-color:var(--num);color:var(--numTx);border-radius:16px}
+#instSteps{width:100%;margin-top:14px}
+#instSteps .a2h{margin:4px 0}
+.instSkip{margin-top:28px;background:none;border:0;color:var(--muted);font-size:15px;text-decoration:underline;padding:10px}
 #a2hChip{display:flex;width:min(86vw,340px);margin:22px auto 0;border:2px solid var(--btn);border-radius:14px;background:var(--panel);overflow:hidden;text-align:left}
 #a2hChip button{background:none;border:0;border-radius:0}
 #a2hGo{flex:1;display:flex;align-items:center;gap:10px;padding:10px 12px}
@@ -309,6 +319,19 @@ button.plain{padding:8px 12px;font-size:15px}
   <div id="a2hSteps"></div>
   <button class="closeBtn" data-close>閉じる</button>
 </div></div>
+
+<!-- WELCOME: add to home screen first (browser only) -->
+<div id="instOv" class="hidden">
+  <div class="instBox">
+    <img src="icon-192.png" alt="" class="instIcon">
+    <h1>KROPKI</h1>
+    <p class="instLead">ホーム画面にアイコンを追加して<br>アプリとして遊びましょう</p>
+    <p class="instSub">次からはアイコンをタップするだけ。<br>URLを覚えておく必要はありません。</p>
+    <button id="instGo" class="instGo">📲 ホーム画面に追加</button>
+    <div id="instSteps"></div>
+    <button id="instSkip" class="instSkip">今はブラウザで遊ぶ</button>
+  </div>
+</div>
 
 <!-- CHANGELOG -->
 <div class="ov" id="chgOv"><div class="sheet">
@@ -579,6 +602,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.9.1', d:'2026-11-20', items:['📲 ブラウザで開いたときは、最初にホーム画面への追加をご案内するようにしました']},
   {v:'0.9.0', d:'2026-11-20', items:['🎵 BGMをつけました。のんびりしたオルゴール風の曲です（設定で OFF・小・中・大）']},
   {v:'0.8.1', d:'2026-11-20', items:['🐈‍⬛ スマホの「アニメーションを減らす」設定がONでも、ねこをタップすると「♡」が出るようにしました','🐈‍⬛ 寝息を「zzz」と小さめの文字で、薄く表示するようにしました','🐈‍⬛ 「♡」や寝息を、ねこの頭のすぐ上に出すようにしました','🐈‍⬛ ハートをドット絵にしました。寝息はのんびり出るようにしました','🐈‍⬛ ハートと寝息が、最後にゆっくり右上へ1ドット動くようにしました']},
   {v:'0.8.0', d:'2026-11-20', items:['🐈‍⬛ ねこの「♡」や寝息「zZ」を大きく見やすくしました。ねこをタップしやすくしました']},
@@ -724,7 +748,40 @@ function refreshA2H(){
   $('a2hRow').classList.toggle('hidden', !canInstall() || isApp());
 }
 addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); A2H = e; refreshA2H(); });
-addEventListener('appinstalled', function(){ A2H = null; S.a2h = 1; save(); refreshA2H(); });
+addEventListener('appinstalled', function(){ A2H = null; S.a2h = 1; save(); refreshA2H(); instDone(); });
+var INSTALLED = false;
+try { navigator.getInstalledRelatedApps && navigator.getInstalledRelatedApps().then(function(a){ INSTALLED = a.length > 0; }).catch(function(){}); } catch(e) {}
+/* Welcome screen: in a normal browser (not opened from the home-screen icon) the first thing shown
+   is the invitation to add the icon, so nobody has to remember the URL. Shown on each browser launch
+   until the game is opened as an app; "今はブラウザで遊ぶ" skips it for this time only. */
+function instSteps(){
+  var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return ios ? '<div class="a2h"><b>⬆️ 共有</b><i>›</i><b>➕ ホーム画面に追加</b></div><p class="a2note">Safariの下の ⬆️ から</p>'
+             : '<div class="a2h"><b>⋮</b><i>›</i><b>📲 ホーム画面に追加</b></div><p class="a2note">Chromeの右上 ⋮ から</p>';
+}
+function instDone(){
+  if ($('instOv').classList.contains('hidden')) return;
+  $('instGo').classList.add('hidden');
+  $('instSteps').innerHTML = '<div class="a2h"><b>✅ 追加しました</b></div><p class="a2note">ホーム画面の KROPKI のアイコンから開いてください</p>';
+  $('instSkip').textContent = 'このままブラウザで遊ぶ';
+}
+function instShow(){
+  if (!canInstall() || isApp()) return false;
+  $('instOv').classList.remove('hidden');
+  return true;
+}
+$('instGo').onclick = function(){
+  S.a2h = 1; save();
+  if (A2H) {
+    var e = A2H; A2H = null; e.prompt();
+    e.userChoice.then(function(r){ if (r && r.outcome === 'accepted') instDone(); else $('instSteps').innerHTML = instSteps(); }).catch(function(){});
+    return;
+  }
+  $('instSteps').innerHTML = INSTALLED
+    ? '<div class="a2h"><b>✅ もう入っています</b></div><p class="a2note">ホーム画面かアプリ一覧の KROPKI から開いてください</p>'
+    : instSteps();
+};
+$('instSkip').onclick = function(){ $('instOv').classList.add('hidden'); if (!S.set.helped) openHelp(); };
 function showAddHome(){
   S.a2h = 1; save(); refreshA2H(); closeOv('setOv');
   if (A2H) { var e = A2H; A2H = null; e.prompt(); e.userChoice.then(function(){ refreshA2H(); }).catch(function(){}); return; }
@@ -1553,7 +1610,7 @@ document.addEventListener('keydown', function(e){
 
 /* ---------- boot ---------- */
 applyTheme(); updateHelp(); renderHome(); save();
-if (!S.set.helped) openHelp();
+if (!instShow() && !S.set.helped) openHelp();
 })();
 </script>
 <script>if('serviceWorker' in navigator&&location.protocol==='https:'){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
