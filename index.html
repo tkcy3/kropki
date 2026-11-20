@@ -577,6 +577,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.7.8', d:'2026-11-20', items:['ミス表示「ルール」で、正しい数字まで赤くなっていたのを直しました。赤くなるのは間違っている数字だけです']},
   {v:'0.7.7', d:'2026-11-20', items:['メモの数字を少し太くしました','🐈‍⬛ ねこはよく眠るようになりました。歩くのはたまにです']},
   {v:'0.7.6', d:'2026-11-20', items:['遊んでいる途中でも、右上の「？」から設定を開けるようにしました']},
   {v:'0.7.5', d:'2026-11-20', items:['🐈‍⬛ ねこの体つきとしっぽを見直し、端では小首をかしげて下をのぞくようにしました']},
@@ -952,18 +953,26 @@ function basicCand(i){
   return m;
 }
 function computeErrors(){
+  // Rule mode: find rule conflicts, but colour only the number that is actually wrong.
+  // A correct number (and a number given from the start) never turns red.
   var cellErr = new Array(N).fill(false), dotErr = new Array(dotEls.length).fill(false);
+  function wrong(i){ return !G.p.givens[i] && G.vals[i] && G.vals[i] !== G.p.sol[i]; }
+  function flag(i, j){ var hit = false; if (wrong(i)) { cellErr[i] = true; hit = true; } if (wrong(j)) { cellErr[j] = true; hit = true; } return hit; }
   if (S.set.err === 2) {
-    for (var i = 0; i < N; i++) if (G.vals[i] && G.vals[i] !== G.p.sol[i]) cellErr[i] = true;
+    for (var i = 0; i < N; i++) if (wrong(i)) cellErr[i] = true;
   } else if (S.set.err === 1) {
     for (var li = 0; li < ctx.lines.length; li++) {
-      var L = ctx.lines[li], seen = {};
-      for (var k = 0; k < n; k++) { var v = G.vals[L[k]]; if (!v) continue; if (seen[v] !== undefined) { cellErr[L[k]] = true; cellErr[seen[v]] = true; } else seen[v] = L[k]; }
+      var L = ctx.lines[li];
+      for (var x = 0; x < n; x++) for (var y = x + 1; y < n; y++) {
+        var p = L[x], q = L[y];
+        if (G.vals[p] && G.vals[p] === G.vals[q]) flag(p, q);
+      }
     }
     for (var e = 0; e < ctx.ea.length; e++) {
-      var a = G.vals[ctx.ea[e]], b = G.vals[ctx.eb[e]];
+      var A = ctx.ea[e], B = ctx.eb[e], a = G.vals[A], b = G.vals[B];
       if (a && b && !(ctx.cmp[ctx.et[e]][a] & (1 << (b-1)))) {
-        if (dotEls[e]) dotErr[e] = true; else { cellErr[ctx.ea[e]] = true; cellErr[ctx.eb[e]] = true; }
+        flag(A, B);
+        if (dotEls[e]) dotErr[e] = true;
       }
     }
   }
