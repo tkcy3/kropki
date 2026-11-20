@@ -124,9 +124,11 @@ button:active{transform:scale(.95)}
 .tools button.dis{opacity:.35}
 .pad{display:flex;justify-content:center;gap:6px;padding:0 var(--side)}
 .pad button{flex:1 1 0;min-width:0;padding:0;overflow:hidden}
-.memoRow button{height:54px;display:grid;font-size:clamp(9px,2.9vw,13px);line-height:1;color:var(--muted);padding:3px 2px;background:var(--memoBtn);border-color:var(--btn)}
+.memoRow{container-type:inline-size}
+/* memo digits grow with the button (small boards have wide buttons), never smaller than before, capped by the height */
+.memoRow button{height:var(--mh,54px);display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1.7em));justify-content:center;align-content:center;font-size:min(calc((var(--mh,54px) - 8px) / var(--rows,3) / 1.2), max(clamp(9px,2.9vw,13px), calc(((100cqw - (var(--n,9) - 1) * 6px) / var(--n,9) - 8px) / var(--cols,3) / 1.2)));line-height:1;color:var(--muted);padding:3px 2px;background:var(--memoBtn);border-color:var(--btn)}
 .memoRow button span{display:flex;align-items:center;justify-content:center}
-.memoRow button span.me{color:var(--fg);font-weight:900;font-size:1.3em}
+.memoRow button span.me{color:var(--fg);font-weight:900;font-size:var(--me,1.3em)}
 .numRow{padding-top:8px;padding-bottom:14px}
 .numRow button{height:66px;font-size:38px;font-weight:800;background:var(--num);color:var(--numTx);border-color:var(--num)}
 /* pressed feedback */
@@ -633,6 +635,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.13.4', d:'2026-11-21', items:['4×4〜6×6 の仮置きボタンの数字を大きくしました','ホームの🏆表示をなくしました']},
   {v:'0.13.3', d:'2026-11-21', items:['難しさボタンの文字の左右に、ゆとりを持たせました（「むずかしい」は「難しい」に）']},
   {v:'0.13.2', d:'2026-11-21', items:['🏠 ホーム画面を、画面いっぱいに使うレイアウトにしました（サイズごとのクリア数をバーで表示）']},
   {v:'0.13.1', d:'2026-11-20', items:['🐈 クリアした問題を開いたときも、ネコが♪で歌っています']},
@@ -900,7 +903,7 @@ function renderHome(){
   refreshA2H();
   var d = S.set.diff, tot = 0;
   for (var pk in S.prog) tot += S.prog[pk].cnt || 0;
-  $('homeStat').textContent = tot ? '🏆 ' + tot : '';
+  $('homeStat').textContent = '';
   $('diffs').innerHTML = '';
   DIFF.forEach(function(name, i){
     var b = document.createElement('button');
@@ -1068,9 +1071,9 @@ try { new ResizeObserver(function(){ layout(); }).observe($('boardWrap')); } cat
 function buildPad(){
   var mr = $('memoRow'), nr = $('numRow'); mr.innerHTML = ''; nr.innerHTML = '';
   var cols = n <= 4 ? 2 : 3;
+  mr.style.setProperty('--cols', cols); mr.style.setProperty('--rows', Math.ceil(n / cols)); mr.style.setProperty('--n', n); mr.style.setProperty('--me', n <= 6 ? '1.2em' : '1.3em'); mr.style.setProperty('--mh', n <= 5 ? '62px' : '54px');
   for (var v = 1; v <= n; v++) (function(v){
     var m = document.createElement('button');
-    m.style.gridTemplateColumns = 'repeat(' + cols + ',1fr)';
     var h = '';
     for (var k = 1; k <= n; k++) h += '<span class="' + (k === v ? 'me' : '') + '">' + k + '</span>';
     m.innerHTML = h;
