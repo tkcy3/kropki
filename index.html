@@ -36,14 +36,14 @@ button:active{transform:scale(.95)}
 
 /* ---------- home ---------- */
 #home{align-items:center}
-.logo{margin-top:7vh;text-align:center}
+.logo{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:64px 0 16px}
 .logo h1{margin:0;font-size:46px;letter-spacing:6px;font-weight:900;color:var(--fg)}
 .logo .dots{display:flex;justify-content:center;gap:14px;margin-top:10px}
 .logo .dots i{width:16px;height:16px;border-radius:50%;border:3px solid var(--fg);display:block;background:#fff}
 .logo .dots i.b{background:#000}
 .homeTop{position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:10px;display:flex;gap:8px}
 .icoBtn{width:48px;height:48px;font-size:22px;display:flex;align-items:center;justify-content:center;padding:0}
-.homeBody{margin-top:auto;width:100%;max-width:520px;padding:0 14px 18px}
+.homeBody{flex:none;width:100%;max-width:520px;padding:0 14px 18px}
 .cont{width:100%;padding:14px;font-size:22px;font-weight:700;margin-bottom:16px;border-color:var(--num);background:var(--num);color:var(--numTx);display:flex;align-items:center;justify-content:center;gap:10px}
 .cont small{font-size:15px;font-weight:400;color:var(--numTx);opacity:.85}
 .diffs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
@@ -543,8 +543,8 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 </script>
 <script>
 (function(){
-var VERSION = '0.5.0';
-var NOTES = ['0.5.0 ホーム画面に追加の案内（GitHub版）。設定に「すべて初期化」を追加','0.4.0 途中のゲームを3つまで保存。「つづき」から選んで再開、不要なものは消せる','0.3.4 プレイ中に「？」から始めたチュートリアルは、終わると元のゲームに戻るように','0.3.3 盤面を左右と下の余白いっぱいまで拡大（枠は細いまま）。案内欄はボタンの上に重ねて表示','0.3.2 案内欄の×ボタンを廃止（チュートリアルは左上の◀でやめる、ヒントは最後に「閉じる」）','0.3.1 盤面を画面幅いっぱいに。左右の端を上のボタン・下のボタンとそろえた','0.3.0 ヒントを「場所→理由→数字」の3段階に（自動では入れない）。チュートリアル追加。消しゴムアイコン、全メモ廃止、ボタン順を変更','0.2.4 リセットボタンを追加（盤面を最初の状態に戻す・戻すボタンで取り消し可）','0.2.3 黒丸＝差1、白丸＝2倍に入れ替え（設定「点の意味」で元に戻せます）','0.2.2 メモの数字を縦横そろった3×3の並びに（点にも重ならない位置）','0.2.1 色を落ち着いたトーンに変更（目にやさしい紙色が標準、暗い画面は真っ黒をやめてチャコール）','0.2.0 カラーデザインに変更。ボタンを押している間は色が変わり、数字を入れた・消したマスが光るように','0.1.4 メモボタンと数字ボタンの幅・位置をそろえた','0.1.3 メモの数字が点に隠れないよう配置を変更、点を少し小さく','0.1.2 数字を大きく太く・見やすい色に。設定に「数字の大きさ（大／特大）」を追加','0.1.1 黒丸・白丸の色を見た目どおりに修正（黒丸＝中が黒、白丸＝中が白）','0.1.0 はじめての版：4×4〜9×9、4段階の難しさ、レベル無限、メモ、ヒント、自動セーブ'];
+var VERSION = '0.5.1';
+var NOTES = ['0.5.1 ホーム画面のタイトルを上下中央に','0.5.0 ホーム画面に追加の案内（GitHub版）。設定に「すべて初期化」を追加','0.4.0 途中のゲームを3つまで保存。「つづき」から選んで再開、不要なものは消せる','0.3.4 プレイ中に「？」から始めたチュートリアルは、終わると元のゲームに戻るように','0.3.3 盤面を左右と下の余白いっぱいまで拡大（枠は細いまま）。案内欄はボタンの上に重ねて表示','0.3.2 案内欄の×ボタンを廃止（チュートリアルは左上の◀でやめる、ヒントは最後に「閉じる」）','0.3.1 盤面を画面幅いっぱいに。左右の端を上のボタン・下のボタンとそろえた','0.3.0 ヒントを「場所→理由→数字」の3段階に（自動では入れない）。チュートリアル追加。消しゴムアイコン、全メモ廃止、ボタン順を変更','0.2.4 リセットボタンを追加（盤面を最初の状態に戻す・戻すボタンで取り消し可）','0.2.3 黒丸＝差1、白丸＝2倍に入れ替え（設定「点の意味」で元に戻せます）','0.2.2 メモの数字を縦横そろった3×3の並びに（点にも重ならない位置）','0.2.1 色を落ち着いたトーンに変更（目にやさしい紙色が標準、暗い画面は真っ黒をやめてチャコール）','0.2.0 カラーデザインに変更。ボタンを押している間は色が変わり、数字を入れた・消したマスが光るように','0.1.4 メモボタンと数字ボタンの幅・位置をそろえた','0.1.3 メモの数字が点に隠れないよう配置を変更、点を少し小さく','0.1.2 数字を大きく太く・見やすい色に。設定に「数字の大きさ（大／特大）」を追加','0.1.1 黒丸・白丸の色を見た目どおりに修正（黒丸＝中が黒、白丸＝中が白）','0.1.0 はじめての版：4×4〜9×9、4段階の難しさ、レベル無限、メモ、ヒント、自動セーブ'];
 var DIFF = ['やさしい','ふつう','むずかしい','鬼'];
 var DSTAR = ['★','★★','★★★','👹'];
 var PC = KCORE.PC;
