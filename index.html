@@ -167,7 +167,9 @@ button:active{transform:scale(.95)}
 .lvGrid button.ok small{color:var(--good)}
 .lvGrid button.go{border-color:var(--accent);border-width:2px}
 .lvGrid button.go small{color:var(--accent);font-weight:700}
-#chkN{color:var(--accent);font-weight:800}
+#tHint{position:relative}
+#chkN{position:absolute;top:5px;left:calc(50% + 9px);min-width:19px;height:19px;padding:0 4px;border-radius:10px;background:var(--accent);color:#fff;font-size:12.5px;font-weight:800;line-height:19px;text-align:center}
+#chkN:empty{display:none}
 .slotRow{display:flex;gap:14px;align-items:stretch;margin-bottom:10px}
 .slot{flex:1;display:flex;align-items:center;gap:14px;padding:10px 12px;text-align:left;min-height:84px}
 .slot .tx{flex:1}
@@ -241,7 +243,7 @@ button.plain{padding:8px 12px;font-size:15px}
 .clearBox .btns button{height:64px;font-size:24px;font-weight:800}
 .clearBox .btns .home{flex:0 0 76px}
 .clearBox .btns .next{flex:1;border-color:var(--num);background:var(--num);color:var(--numTx)}
-.toast{position:fixed;left:50%;bottom:44%;transform:translateX(-50%);background:var(--panel);border:2px solid var(--btn);padding:10px 18px;border-radius:14px;font-size:18px;z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:44%;transform:translateX(-50%);background:var(--panel);border:2px solid var(--btn);padding:10px 18px;border-radius:14px;font-size:18px;z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;width:max-content;max-width:calc(100vw - 32px);text-align:center;line-height:1.45}
 .toast.on{opacity:1}
 </style>
 </head>
@@ -278,7 +280,7 @@ button.plain{padding:8px 12px;font-size:15px}
   <div class="msg" id="msg"></div>
   <div class="tools">
     <button id="tReset"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 3.5v4.2h4.2"/></svg><small>リセット</small></button>
-    <button id="tHint"><svg viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.2h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg><small>チェック<span id="chkN"></span></small></button>
+    <button id="tHint"><svg viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.2h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg><span id="chkN"></span><small>チェック</small></button>
     <button id="tErase"><svg viewBox="0 0 24 24"><path d="M4 15.2l9.2-9.2a2 2 0 0 1 2.8 0l3 3a2 2 0 0 1 0 2.8L12 19H7.8z"/><path d="M8.6 10.6l5.8 5.8"/><path d="M12 19h8"/></svg><small>消す</small></button>
     <button id="tUndo"><svg viewBox="0 0 24 24"><path d="M8.5 5L4 9.5 8.5 14"/><path d="M4 9.5h10.5a5 5 0 0 1 0 10H11"/></svg><small>戻る</small></button>
     <button id="tRedo"><svg viewBox="0 0 24 24"><g transform="matrix(-1 0 0 1 24 0)"><path d="M8.5 5L4 9.5 8.5 14"/><path d="M4 9.5h10.5a5 5 0 0 1 0 10H11"/></g></svg><small>進む</small></button>
@@ -628,6 +630,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.12.2', d:'2026-11-20', items:['長いお知らせが画面からはみ出さないようにしました','💡チェックの残り回数を、アイコンの右上に表示するようにしました']},
   {v:'0.12.1', d:'2026-11-20', items:['📋 コピー中の案内を1行にして、盤面の下の行が隠れないようにしました']},
   {v:'0.12.0', d:'2026-11-20', items:['📋 メモの入ったマスを長押しするとコピー。続けてタップしたマスに同じメモを貼り付けられます（「終わる」で終了）']},
   {v:'0.11.1', d:'2026-11-20', items:['🗂 問題一覧に、盤面の進み具合を小さな図で表示するようにしました','ホームの「つづき」をなくしました（問題一覧から再開できます）']},
@@ -1137,7 +1140,7 @@ function render(){
   for (var v2 = 1; v2 <= n; v2++) { nb[v2-1].classList.toggle('full', cnt[v2] >= n); mb[v2-1].classList.toggle('full', cnt[v2] >= n); mb[v2-1].classList.toggle('on', !!(sm & (1 << (v2-1)))); }
   $('tUndo').classList.toggle('dis', !G.undo.length);
   var cl = G.tut ? CHKMAX : CHKMAX - (G.chk || 0);
-  $('chkN').textContent = G.tut ? '' : ' ' + cl; $('tHint').classList.toggle('dis', cl <= 0);
+  $('chkN').textContent = G.tut ? '' : String(cl); $('tHint').classList.toggle('dis', cl <= 0);
   $('tRedo').classList.toggle('dis', !(G.redo && G.redo.length));
 }
 function flashCell(i, cls){
@@ -1169,7 +1172,7 @@ function endCopy(){ if (!COPY) return; COPY = null; clearMark(); clearMsg(); if 
 function memoTxt(m){ var a = []; for (var k = 1; k <= n; k++) if (m & (1 << (k-1))) a.push(k); return a.join('・'); }
 function startCopy(i){
   if (!G || G.done || TUT) return;
-  if (G.vals[i] || !G.memo[i]) { toast('メモの入ったマスを長押しするとコピーできます'); return; }
+  if (G.vals[i] || !G.memo[i]) { toast('コピーできるのはメモだけです'); return; }
   if (HINT) endHint(); if (CHK) endCheck();
   COPY = {m:G.memo[i], src:i};
   try { navigator.vibrate && navigator.vibrate(15); } catch(e) {}
