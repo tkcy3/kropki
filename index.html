@@ -630,6 +630,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.13.0', d:'2026-11-20', items:['🖼 クリアした問題は、開くと解き終わった盤面がそのまま見られます。リセットを押すと最初から解き直せます','解き直し中の問題も、一覧で緑のまま表示します']},
   {v:'0.12.6', d:'2026-11-20', items:['🐈 ♪♪の2つ目を1ドット左に寄せました']},
   {v:'0.12.5', d:'2026-11-20', items:['🐈 ♪♪を、旗付きの音符2つに変えました']},
   {v:'0.12.4', d:'2026-11-20', items:['🐈 ネコの♪もドット絵にしました']},
@@ -948,13 +949,13 @@ function openLevels(nn, d){
   for (var lv = 1; lv <= LVMAX; lv++) (function(lv){
     var b = document.createElement('button'), g = S.games[key(nn, d, lv)], sub = '', cls = '', th = '';
     if (g && !g.done) {
-      cls = 'go'; sub = '▶ ' + fmt(g.time);
+      cls = p.lv[lv] !== undefined ? 'go ok' : 'go'; sub = '▶ ' + fmt(g.time);
       for (var i = 0; i < nn*nn; i++) th += '<i class="' + (g.p.givens[i] ? 'g' : (g.vals[i] ? 'u' : (g.memo[i] ? 'm' : ''))) + '"></i>';
     } else if (p.lv[lv] !== undefined) {
       cls = 'ok'; sub = p.lv[lv] ? fmt(p.lv[lv]) : '✓';
       th = new Array(nn*nn + 1).join('<i class="f"></i>');
     } else th = new Array(nn*nn + 1).join('<i></i>');
-    if (!first && cls !== 'ok') first = b;
+    if (!first && cls.indexOf('ok') < 0) first = b;
     b.className = cls;
     b.innerHTML = '<b>' + lv + '</b><div class="thumb" style="grid-template-columns:repeat(' + nn + ',1fr)">' + th + '</div><small>' + sub + '</small>';
     b.onclick = function(){ closeOv('lvOv'); startGame(nn, d, lv); };
@@ -976,7 +977,13 @@ function newGameState(nn, d, level){
 }
 function startGame(nn, d, lv){
   TUT = null; lv = lv || 1;
-  var k = key(nn, d, lv), g = S.games[k];
+  var k = key(nn, d, lv), g = S.games[k], pr = prog(nn, d);
+  if ((!g || g.done) && pr.lv[lv] !== undefined) {   // cleared: show the finished board (not saved; it is just the answer)
+    g = newGameState(nn, d, lv); g.vals = g.p.sol.slice(); g.done = true; g.time = pr.lv[lv] || 0;
+    show('game'); loadGame(g); requestAnimationFrame(layout);
+    toast('クリア済み。リセットで解き直せます');
+    return;
+  }
   if (!g || g.done) g = S.games[k] = newGameState(nn, d, lv);
   g.last = Date.now();
   S.last = k; save();
@@ -1258,10 +1265,20 @@ $('tRedo').onclick = function(){
 };
 $('tReset').onclick = function(){
   if (tutBlock()) return;
-  if (!G || G.done) return;
+  if (!G || G.tut) return;
+  if (G.done) {   // a cleared board stays on view until reset: then it is solved again from the start
+    confirmBox('もう一度、最初から解きますか？', function(){
+      for (var j = 0; j < N; j++) { if (!G.p.givens[j]) G.vals[j] = 0; G.memo[j] = 0; cellEls[j]._keep = ''; cellEls[j].style.animationDelay = ''; }
+      G.done = false; G.time = 0; G.chk = 0; G.undo = []; G.redo = []; G.sel = -1;
+      var k = key(G.n, G.diff, G.level); G.last = Date.now(); S.games[k] = G; S.last = k;
+      catPoke('reset'); updateTime(); render(); save(true);
+      toast('⟲ 最初から解き直します');
+    });
+    return;
+  }
   var ch = [];
   for (var i = 0; i < N; i++) if (!G.p.givens[i] && (G.vals[i] || G.memo[i])) ch.push(snap(i));
-  if (!ch.length) { toast('まだ何も入っていません'); return; }
+  if (!ch.length && G.time < 1) { toast('まだ何も入っていません'); return; }
   confirmBox('盤面とタイムを最初の状態に戻しますか？', function(){
     for (var k = 0; k < ch.length; k++) { G.vals[ch[k].i] = 0; G.memo[ch[k].i] = 0; }
     pushUndo(ch); G.sel = -1; G.time = 0; G.chk = 0; updateTime(); after();
@@ -1649,7 +1666,7 @@ setInterval(function(){  // one tick = 180 ms
 }, 180);
 
 /* ---------- timer ---------- */
-function updateTime(){ $('gTime').textContent = (G && S.set.timer) ? '⏱ ' + fmt(G.time) : ''; }
+function updateTime(){ $('gTime').textContent = (G && S.set.timer && !(G.done && !G.time)) ? '⏱ ' + fmt(G.time) : ''; }
 var lastTick = Date.now();
 setInterval(function(){
   var now = Date.now(), dt = (now - lastTick) / 1000; lastTick = now;
