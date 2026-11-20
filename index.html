@@ -16,13 +16,13 @@
   --bg:#25282d;--panel:#2e3238;--line:#4b5058;--frame:#9aa0a8;--cell:#2f3339;--fg:#e8e6e1;--given:#ecebe7;--user:#9cc2ec;--memo:#a7abb2;
   --sel:#44597a;--hl:#363b43;--same:#3d4d63;--err:#ec8a80;--muted:#9a9fa7;--btn:#5b616a;--accent:#d9b25f;--good:#8cc79a;
   --num:#4a5566;--numTx:#f1efe9;--numPress:#d9b25f;--memoBtn:#2e3238;--memoPress:#d9b25f;--pressTx:#2a2418;
-  --cat:#a3a7ae;--relbg:rgba(217,178,95,.2);--put:rgba(217,178,95,.35);--mput:rgba(217,178,95,.22);--del:rgba(236,138,128,.35);
+  --catInk:#cfccc6;--relbg:rgba(217,178,95,.2);--put:rgba(217,178,95,.35);--mput:rgba(217,178,95,.22);--del:rgba(236,138,128,.35);
 }
 body.light{
   --bg:#e8e5de;--panel:#f6f4ef;--line:#bdb8ae;--frame:#5a5752;--cell:#f8f6f1;--fg:#2d2c2a;--given:#2b2a28;--user:#2f5a94;--memo:#6d6a65;
   --sel:#f0d998;--hl:#ede9e0;--same:#d6e2ef;--err:#c4473b;--muted:#7a7670;--btn:#a9a49b;--accent:#a8741a;--good:#3d8a52;
   --num:#56647a;--numTx:#f8f6f1;--numPress:#e3b95a;--memoBtn:#f3f0ea;--memoPress:#e3b95a;--pressTx:#2a2418;
-  --cat:#8e887e;--relbg:rgba(227,185,90,.3);--put:rgba(227,185,90,.45);--mput:rgba(227,185,90,.28);--del:rgba(196,71,59,.28);
+  --catInk:#2b2a28;--relbg:rgba(227,185,90,.3);--put:rgba(227,185,90,.45);--mput:rgba(227,185,90,.28);--del:rgba(196,71,59,.28);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden}
@@ -76,31 +76,20 @@ button:active{transform:scale(.95)}
 .cell.wave{animation:wave .7s ease both}
 @keyframes wave{0%{transform:scale(1)}40%{transform:scale(.6);background:var(--accent);color:#000}100%{transform:scale(1)}}
 #catStage{position:absolute;left:var(--side);right:var(--side);top:0;pointer-events:none;overflow:visible;z-index:3}
-#catBox{position:absolute;bottom:0;left:0;pointer-events:auto;transition-property:left;transition-timing-function:linear}
+#catBox{position:absolute;bottom:0;left:0;pointer-events:auto}
 #catBody{transform-origin:50% 100%}
-#catSp{transform-origin:50% 100%;animation:catSway 2.6s ease-in-out infinite}
 #catSp svg{display:block;shape-rendering:crispEdges}
-#catSp rect.c{fill:var(--cat)}#catSp rect.e{fill:var(--bg)}
-#catBox.flip #catSp{transform:scaleX(-1)}
-#catBox.flip #catSp{animation:catSwayF 2.6s ease-in-out infinite}
-@keyframes catSway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
-@keyframes catSwayF{0%,100%{transform:scaleX(-1) rotate(-4deg)}50%{transform:scaleX(-1) rotate(4deg)}}
-#catBox.walking #catBody{animation:catBob .36s steps(2) infinite}
-@keyframes catBob{50%{transform:translateY(-2px)}}
-#catBody.hop{animation:catHop .5s ease-out}
-@keyframes catHop{0%{transform:translateY(0) scaleY(.85)}45%{transform:translateY(-9px) scaleY(1.05)}100%{transform:translateY(0)}}
-#catBody.shock{animation:catShock .45s linear}
-@keyframes catShock{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px) translateY(-6px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
-#catBody.think{animation:catThink 1.4s ease-in-out}
-@keyframes catThink{0%,100%{transform:rotate(0)}25%,75%{transform:rotate(-14deg)}}
-#catBody.party{animation:catHop .55s ease-out infinite}
-#catBox.sleep #catSp{animation:catBreath 3s ease-in-out infinite}
-@keyframes catBreath{50%{transform:scaleY(.94)}}
-#catFx{position:absolute;left:70%;top:-10px;font-size:13px;font-weight:800;color:var(--cat);opacity:0;pointer-events:none;white-space:nowrap}
-#catFx.on{animation:catFx 1.2s ease-out}
-#catFx.loop{animation:catFx 2.4s ease-out infinite}
-@keyframes catFx{0%{opacity:0;transform:translate(0,4px)}25%{opacity:1}100%{opacity:0;transform:translate(14px,-22px)}}
-@media (prefers-reduced-motion:reduce){#catSp,#catBody,#catBox{animation:none!important;transition:none!important}}
+#catSp rect{fill:var(--catInk)}
+#catBody.hop{animation:catHop .45s steps(1) }
+@keyframes catHop{0%{transform:translateY(0)}25%{transform:translateY(-6px)}50%{transform:translateY(-9px)}75%{transform:translateY(-3px)}100%{transform:translateY(0)}}
+#catBody.party{animation:catHop .6s steps(1) infinite}
+#catBody.shock{animation:catShock .48s steps(1)}
+@keyframes catShock{0%{transform:translate(0,-3px)}25%{transform:translate(-3px,0)}50%{transform:translate(3px,0)}75%{transform:translate(-3px,0)}100%{transform:translate(0,0)}}
+#catFx{position:absolute;left:78%;top:-12px;font-size:13px;font-weight:800;color:var(--catInk);opacity:0;pointer-events:none;white-space:nowrap}
+#catFx.on{animation:catFx 1.2s steps(4)}
+#catFx.loop{animation:catFx 2.4s steps(6) infinite}
+@keyframes catFx{0%{opacity:0;transform:translate(0,3px)}25%{opacity:1}100%{opacity:0;transform:translate(9px,-15px)}}
+@media (prefers-reduced-motion:reduce){#catBody,#catFx{animation:none!important}}
 .memo{position:absolute;inset:0;font-size:calc(var(--cs) * var(--mz,.28));color:var(--memo);font-weight:700}
 .memo span{position:absolute;transform:translate(-50%,-50%);line-height:1}
 .memo span.mm{color:var(--accent);font-weight:800}
@@ -587,6 +576,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.7.0', d:'2026-11-20', items:['🐈‍⬛ ねこが新しくなりました。コマ送りで座ったり歩いたりします']},
   {v:'0.6.2', d:'2026-11-20', items:['🐈 画面が小さいときも、ねこがいられるようにしました']},
   {v:'0.6.1', d:'2026-11-20', items:['🐈 ねこを小さくしました']},
   {v:'0.6.0', d:'2026-11-20', items:['🐈 盤面の上に、ドットのねこがやってきました（設定でOFFにできます）']},
@@ -1312,27 +1302,33 @@ $('cHome').onclick = function(){ closeOv('clearOv'); TUT = null; goHome(); };
 function goHome(){ TUT = null; HINT = null; clearMark(); clearMsg(); save(true); G && cellEls.forEach(function(el){ el._keep = ''; }); renderHome(); show('home'); }
 $('gBack').onclick = function(){ if (TUT) exitTut(); else goHome(); };
 
-/* ---------- the cat (lives in the empty band above the board) ---------- */
-var CAT_AWAKE = ["X......X..","XX....XX..","XXXXXXXX..","XEXXXXEX..","XEXXXXEX.X",".XXXXXX..X",".XXXXXXXXX",".X.X..X.X."];
-var CAT_SLEEP = ["X......X..","XX....XX..","XXXXXXXX..","XXXXXXXX..","XEEXXEEX.X",".XXXXXX..X",".XXXXXXXXX",".X.X..X.X."];
-var CAT = {on:false, sc:5, x:0, w:0, maxX:0, state:'idle', last:Date.now(), walkT:null};
-function catSvg(map){
-  var s = '<svg width="' + 10*CAT.sc + '" height="' + 8*CAT.sc + '" viewBox="0 0 10 8">';
-  for (var y = 0; y < 8; y++) for (var x = 0; x < 10; x++) { var ch = map[y][x]; if (ch !== '.') s += '<rect class="' + (ch === 'X' ? 'c' : 'e') + '" x="' + x + '" y="' + y + '" width="1.02" height="1.02"/>'; }
-  return s + '</svg>';
+/* ---------- the cat (lives in the empty band above the board) ----------
+   Tamagotchi-like: two-frame flips and pixel-step moves, no smooth motion. */
+var CAT_SIT_A = ["#...#.....","##.##.....","#####.....","#.#.#.....","#####..#..",".###...#..",".####..#..","######.#..","########.."];
+var CAT_SIT_B = ["#...#.....","##.##.....","#####.....","#.#.#.....","#####.....",".###......",".####.....","#######...","########.."];
+var CAT_WALK_A = [".........","#...#.....","##.##...##","#####....#","#.#.#....#","#####...#.",".#######..",".#######..",".#.#..#.#."];
+var CAT_WALK_B = CAT_WALK_A.slice(0, 8).concat(["..#.#.#.#."]);
+function catShut(m){ var r = m.slice(); for (var i = 0; i < r.length; i++) if (r[i].indexOf('#.#.#') === 0) { r[i] = '#####' + r[i].slice(5); break; } return r; }
+var CAT = {on:false, sc:3, x:0, maxX:0, dir:-1, to:0, state:'sit', tail:0, frame:0, tick:0, blink:0, last:Date.now()};
+function catDraw(){
+  var m;
+  if (CAT.state === 'walk') m = CAT.frame ? CAT_WALK_B : CAT_WALK_A;
+  else m = CAT.tail ? CAT_SIT_B : CAT_SIT_A;
+  if (CAT.state === 'sleep' || CAT.blink > 0) m = catShut(m);
+  var flip = CAT.dir > 0, w = 10, h = 9, s = '<svg width="' + w*CAT.sc + '" height="' + h*CAT.sc + '" viewBox="0 0 ' + w + ' ' + h + '">';
+  for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) if (m[y][x] === '#') s += '<rect x="' + (flip ? w-1-x : x) + '" y="' + y + '" width="1.02" height="1.02"/>';
+  $('catSp').innerHTML = s + '</svg>';
+  $('catBox').style.left = CAT.x + 'px';
 }
-function catDraw(){ $('catSp').innerHTML = catSvg(CAT.state === 'sleep' ? CAT_SLEEP : CAT_AWAKE); }
 function catLayout(gap, width, bottom){
   var st = $('catStage');
   CAT.on = !!S.set.cat && gap >= 26;
   st.style.display = CAT.on ? '' : 'none';
   if (!CAT.on) return;
   st.style.height = gap + 'px'; st.style.bottom = bottom + 'px'; st.style.top = 'auto';
-  var sc = 3; // small: about a quarter of the first version's area
-  if (sc !== CAT.sc || !$('catSp').firstChild) { CAT.sc = sc; catDraw(); }
-  CAT.w = 10 * CAT.sc; CAT.maxX = Math.max(0, width - CAT.w);
+  CAT.maxX = Math.max(0, Math.floor((width - 10*CAT.sc) / CAT.sc) * CAT.sc);
   if (CAT.x > CAT.maxX) CAT.x = CAT.maxX;
-  $('catBox').style.left = CAT.x + 'px';
+  catDraw();
 }
 function catFx(txt, loop){
   var f = $('catFx'); f.textContent = txt || ''; f.className = '';
@@ -1341,37 +1337,41 @@ function catFx(txt, loop){
 function catAnim(cls){ var b = $('catBody'); b.className = ''; void b.offsetWidth; if (cls) b.className = cls; }
 function catWake(){
   CAT.last = Date.now();
-  if (CAT.state === 'sleep') { CAT.state = 'idle'; $('catBox').classList.remove('sleep'); catFx(''); catDraw(); }
+  if (CAT.state === 'sleep') { CAT.state = 'sit'; catFx(''); if (CAT.on) catDraw(); }
 }
 function catPoke(kind){
+  if (kind === 'reset') { CAT.state = 'sit'; CAT.last = Date.now(); catAnim(''); catFx(''); if (CAT.on) catDraw(); return; }
   if (!CAT.on) { CAT.last = Date.now(); return; }
   catWake();
-  if (CAT.state === 'party' && kind !== 'reset') return;
-  if (kind === 'reset') { CAT.state = 'idle'; catAnim(''); catFx(''); return; }
-  if (kind === 'party') { CAT.state = 'party'; catAnim('party'); catFx('♪', true); return; }
-  if (kind === 'hop') { catAnim('hop'); }
+  if (CAT.state === 'party') return;
+  if (kind === 'party') { CAT.state = 'party'; catAnim('party'); catFx('♪', true); catDraw(); return; }
+  if (CAT.state === 'walk') { CAT.state = 'sit'; catDraw(); }
+  if (kind === 'hop') catAnim('hop');
   else if (kind === 'shock') { catAnim('shock'); catFx('!'); }
-  else if (kind === 'think') { catAnim('think'); catFx('?'); }
+  else if (kind === 'think') { CAT.blink = 3; catDraw(); catFx('?'); }
   else if (kind === 'pet') { catAnim('hop'); catFx('♪'); }
 }
-function catWalk(){
-  if (!CAT.on || CAT.state !== 'idle' || CAT.maxX < 20) return;
-  var to = Math.round(Math.random() * CAT.maxX), d = to - CAT.x;
-  if (Math.abs(d) < 24) return;
-  var box = $('catBox'), dur = Math.abs(d) / 18;
-  box.classList.toggle('flip', d < 0);
-  box.style.transitionDuration = dur + 's'; box.classList.add('walking');
-  box.style.left = to + 'px'; CAT.x = to;
-  clearTimeout(CAT.walkT); CAT.walkT = setTimeout(function(){ box.classList.remove('walking'); }, dur * 1000);
-}
 $('catBox').addEventListener('pointerdown', function(){ catPoke('pet'); });
-setInterval(function(){
+setInterval(function(){  // one tick = 150 ms
   if (!CAT.on || !$('game').classList.contains('on') || document.hidden) return;
-  if (CAT.state === 'idle' && Date.now() - CAT.last > 25000) {
-    CAT.state = 'sleep'; $('catBox').classList.add('sleep'); $('catBox').classList.remove('walking'); catDraw(); catFx('z', true); return;
-  }
-  if (CAT.state === 'idle' && !$('catBox').classList.contains('walking') && Math.random() < 0.18) catWalk();
-}, 1000);
+  CAT.tick++;
+  var redraw = false;
+  if (CAT.blink > 0) { CAT.blink--; redraw = true; }
+  if (CAT.state === 'sit') {
+    if (Date.now() - CAT.last > 25000) { CAT.state = 'sleep'; catFx('z', true); catDraw(); return; }
+    if (CAT.tick % 6 === 0) { CAT.tail ^= 1; redraw = true; }
+    if (Math.random() < 0.02) { CAT.blink = 1; redraw = true; }
+    if (Math.random() < 0.025 && CAT.maxX > 30) {
+      var to = Math.round(Math.random() * CAT.maxX / CAT.sc) * CAT.sc;
+      if (Math.abs(to - CAT.x) >= 6 * CAT.sc) { CAT.to = to; CAT.dir = to > CAT.x ? 1 : -1; CAT.state = 'walk'; redraw = true; }
+    }
+  } else if (CAT.state === 'walk' && CAT.tick % 2 === 0) {
+    CAT.frame ^= 1; CAT.x += CAT.dir * CAT.sc;
+    if ((CAT.dir > 0 && CAT.x >= CAT.to) || (CAT.dir < 0 && CAT.x <= CAT.to)) { CAT.x = CAT.to; CAT.state = 'sit'; }
+    redraw = true;
+  } else if (CAT.state === 'party' && CAT.tick % 3 === 0) { CAT.tail ^= 1; redraw = true; }
+  if (redraw) catDraw();
+}, 150);
 
 /* ---------- timer ---------- */
 function updateTime(){ $('gTime').textContent = (G && S.set.timer) ? '⏱ ' + fmt(G.time) : ''; }
