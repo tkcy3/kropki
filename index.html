@@ -16,13 +16,13 @@
   --bg:#25282d;--panel:#2e3238;--line:#4b5058;--frame:#9aa0a8;--cell:#2f3339;--fg:#e8e6e1;--given:#ecebe7;--user:#9cc2ec;--memo:#a7abb2;
   --sel:#44597a;--hl:#363b43;--same:#3d4d63;--err:#ec8a80;--muted:#9a9fa7;--btn:#5b616a;--accent:#d9b25f;--good:#8cc79a;
   --num:#4a5566;--numTx:#f1efe9;--numPress:#d9b25f;--memoBtn:#2e3238;--memoPress:#d9b25f;--pressTx:#2a2418;
-  --relbg:rgba(217,178,95,.2);--put:rgba(217,178,95,.35);--mput:rgba(217,178,95,.22);--del:rgba(236,138,128,.35);
+  --cat:#a3a7ae;--relbg:rgba(217,178,95,.2);--put:rgba(217,178,95,.35);--mput:rgba(217,178,95,.22);--del:rgba(236,138,128,.35);
 }
 body.light{
   --bg:#e8e5de;--panel:#f6f4ef;--line:#bdb8ae;--frame:#5a5752;--cell:#f8f6f1;--fg:#2d2c2a;--given:#2b2a28;--user:#2f5a94;--memo:#6d6a65;
   --sel:#f0d998;--hl:#ede9e0;--same:#d6e2ef;--err:#c4473b;--muted:#7a7670;--btn:#a9a49b;--accent:#a8741a;--good:#3d8a52;
   --num:#56647a;--numTx:#f8f6f1;--numPress:#e3b95a;--memoBtn:#f3f0ea;--memoPress:#e3b95a;--pressTx:#2a2418;
-  --relbg:rgba(227,185,90,.3);--put:rgba(227,185,90,.45);--mput:rgba(227,185,90,.28);--del:rgba(196,71,59,.28);
+  --cat:#8e887e;--relbg:rgba(227,185,90,.3);--put:rgba(227,185,90,.45);--mput:rgba(227,185,90,.28);--del:rgba(196,71,59,.28);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden}
@@ -60,7 +60,7 @@ button:active{transform:scale(.95)}
 .bar{display:flex;align-items:center;gap:8px;padding:8px var(--side);height:62px}
 .bar .title{flex:1;text-align:center;font-size:20px;font-weight:800;border:2px solid var(--btn);border-radius:12px;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;overflow:hidden}
 .bar .title .tm{font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted);font-size:17px}
-#boardWrap{flex:1;display:flex;align-items:flex-end;justify-content:center;min-height:0;padding:4px var(--side) 6px}
+#boardWrap{position:relative;flex:1;display:flex;align-items:flex-end;justify-content:center;min-height:0;padding:4px var(--side) 6px}
 #board{flex:none;position:relative;background:var(--line);border:3px solid var(--frame);border-radius:4px;box-shadow:0 3px 12px rgba(0,0,0,.15)}
 .cell{position:absolute;background:var(--cell);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs) * var(--fz,.74));line-height:1;color:var(--user);font-weight:800}
 .cell.g{color:var(--given);font-weight:800}
@@ -75,6 +75,32 @@ button:active{transform:scale(.95)}
 @keyframes bad{0%,40%{background:var(--err);color:#fff}100%{}}
 .cell.wave{animation:wave .7s ease both}
 @keyframes wave{0%{transform:scale(1)}40%{transform:scale(.6);background:var(--accent);color:#000}100%{transform:scale(1)}}
+#catStage{position:absolute;left:var(--side);right:var(--side);top:0;pointer-events:none;overflow:visible;z-index:3}
+#catBox{position:absolute;bottom:0;left:0;pointer-events:auto;transition-property:left;transition-timing-function:linear}
+#catBody{transform-origin:50% 100%}
+#catSp{transform-origin:50% 100%;animation:catSway 2.6s ease-in-out infinite}
+#catSp svg{display:block;shape-rendering:crispEdges}
+#catSp rect.c{fill:var(--cat)}#catSp rect.e{fill:var(--bg)}
+#catBox.flip #catSp{transform:scaleX(-1)}
+#catBox.flip #catSp{animation:catSwayF 2.6s ease-in-out infinite}
+@keyframes catSway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes catSwayF{0%,100%{transform:scaleX(-1) rotate(-4deg)}50%{transform:scaleX(-1) rotate(4deg)}}
+#catBox.walking #catBody{animation:catBob .36s steps(2) infinite}
+@keyframes catBob{50%{transform:translateY(-2px)}}
+#catBody.hop{animation:catHop .5s ease-out}
+@keyframes catHop{0%{transform:translateY(0) scaleY(.85)}45%{transform:translateY(-16px) scaleY(1.05)}100%{transform:translateY(0)}}
+#catBody.shock{animation:catShock .45s linear}
+@keyframes catShock{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px) translateY(-6px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+#catBody.think{animation:catThink 1.4s ease-in-out}
+@keyframes catThink{0%,100%{transform:rotate(0)}25%,75%{transform:rotate(-14deg)}}
+#catBody.party{animation:catHop .55s ease-out infinite}
+#catBox.sleep #catSp{animation:catBreath 3s ease-in-out infinite}
+@keyframes catBreath{50%{transform:scaleY(.94)}}
+#catFx{position:absolute;left:60%;top:-4px;font-size:18px;font-weight:800;color:var(--cat);opacity:0;pointer-events:none;white-space:nowrap}
+#catFx.on{animation:catFx 1.2s ease-out}
+#catFx.loop{animation:catFx 2.4s ease-out infinite}
+@keyframes catFx{0%{opacity:0;transform:translate(0,4px)}25%{opacity:1}100%{opacity:0;transform:translate(14px,-22px)}}
+@media (prefers-reduced-motion:reduce){#catSp,#catBody,#catBox{animation:none!important;transition:none!important}}
 .memo{position:absolute;inset:0;font-size:calc(var(--cs) * var(--mz,.28));color:var(--memo);font-weight:700}
 .memo span{position:absolute;transform:translate(-50%,-50%);line-height:1}
 .memo span.mm{color:var(--accent);font-weight:800}
@@ -231,7 +257,7 @@ button.plain{padding:8px 12px;font-size:15px}
     <div class="title"><span id="gTitle"></span><span class="tm" id="gTime"></span></div>
     <button class="icoBtn" id="gHelp" aria-label="遊び方">?</button>
   </div>
-  <div id="boardWrap"><div id="board"></div></div>
+  <div id="boardWrap"><div id="catStage"><div id="catBox"><div id="catBody"><div id="catSp"></div></div><span id="catFx"></span></div></div><div id="board"></div></div>
   <div class="dock">
   <div class="msg" id="msg"></div>
   <div class="tools">
@@ -254,6 +280,7 @@ button.plain{padding:8px 12px;font-size:15px}
   <div class="row">同じ数字を強調<div class="seg" data-k="same"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">メモ自動消去<div class="seg" data-k="autoMemo"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">数字の大きさ<div class="seg" data-k="big"><button data-v="0">大</button><button data-v="1">特大</button></div></div>
+  <div class="row">ねこ<div class="seg" data-k="cat"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">タイマー<div class="seg" data-k="timer"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">記録<span id="statLine" style="font-size:15px;color:var(--muted)"></span></div>
   <button class="row rowBtn" id="stVer"><span>📋 更新内容<span class="newb" id="stVerNew">NEW</span></span><span class="rs">v<span id="stVerNo"></span> ›</span></button>
@@ -560,6 +587,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.6.0', d:'2026-11-20', items:['🐈 盤面の上に、ドットのねこがやってきました（設定でOFFにできます）']},
   {v:'0.5.3', d:'2026-11-20', items:['確認のボタンを「はい／いいえ」にしました']},
   {v:'0.5.2', d:'2026-11-20', items:['📋 更新内容の見せ方を新しくしました']},
   {v:'0.5.1', d:'2026-11-20', items:['ホーム画面のタイトルを、上下のまん中に置きました']},
@@ -600,7 +628,7 @@ var KEY = 'kropki-save-v1';
 var S = null;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
 if (!S || typeof S !== 'object') S = {};
-function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1}; }
+function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1, cat:1}; }
 S.set = Object.assign(defaultSet(), S.set || {});
 S.prog = S.prog || {};
 if (!S.set.calm) { S.set.calm = 1; S.set.theme = 'light'; }
@@ -832,6 +860,7 @@ function startGame(nn, d, forceLevel){
   requestAnimationFrame(layout);
 }
 function loadGame(g){
+  catPoke('reset');
   G = g; n = g.n; N = n*n; HINT = null; clearMark(); clearMsg();
   ctx = KCORE.makeCtx(n, {h:g.p.h, v:g.p.v});
   adj = []; for (var i = 0; i < N; i++) adj.push([]);
@@ -875,6 +904,7 @@ function layout(){
   b.style.setProperty('--cs', cs + 'px');
   b.style.setProperty('--fz', S.set.big ? .92 : .74);
   b.style.setProperty('--mz', S.set.big ? .29 : .26);
+  catLayout(H + parseFloat(cs0.paddingTop) - S0, W, S0 + parseFloat(cs0.paddingBottom));
   function lo(c){ return P[c]; } function sz(c){ return P[c+1] - g - P[c]; }
   for (var i = 0; i < N; i++) {
     var r = Math.floor(i/n), c = i%n, el = cellEls[i];
@@ -1023,14 +1053,14 @@ function setValue(v){
     }
   }
   pushUndo(ch); after();
-  if (!G.done) animCell(i, erased ? 'del' : 'put', erased ? String(erased) : '');
+  if (!G.done) { animCell(i, erased ? 'del' : 'put', erased ? String(erased) : ''); catPoke(!erased && S.set.err && computeErrors().c[i] ? 'shock' : 'hop'); }
 }
 function toggleMemo(v){
   if (!editable()) { if (G && G.sel < 0) toast('マスを選んでください'); return; }
   if (tutGuard('m', v)) return;
   var i = G.sel; if (G.vals[i]) return;
   pushUndo([snap(i)]);
-  G.memo[i] ^= 1 << (v-1); after(); animCell(i, 'mput');
+  G.memo[i] ^= 1 << (v-1); after(); animCell(i, 'mput'); catWake();
 }
 $('tErase').onclick = function(){
   if (tutBlock()) return;
@@ -1153,7 +1183,7 @@ $('tHint').onclick = function(){
   if (tutBlock()) return;
   if (HINT) { hintStage(HINT.s + 1); return; }
   var st = findHint(); if (!st) return;
-  HINT = {st:st, s:0}; G.hints++; save();
+  HINT = {st:st, s:0}; G.hints++; save(); catPoke('think');
   hintStage(1);
 };
 
@@ -1243,7 +1273,7 @@ function after(){
 
 /* ---------- clear ---------- */
 function win(){
-  G.done = true; G.sel = -1;
+  G.done = true; G.sel = -1; catPoke('party');
   if (G.tut) {
     clearMark(); clearMsg();
     for (var t = 0; t < N; t++) { var te = cellEls[t]; te.style.animationDelay = ((Math.floor(t/n) + t%n) * 45) + 'ms'; te._keep = 'wave'; }
@@ -1278,6 +1308,67 @@ $('cNext').onclick = function(){
 $('cHome').onclick = function(){ closeOv('clearOv'); TUT = null; goHome(); };
 function goHome(){ TUT = null; HINT = null; clearMark(); clearMsg(); save(true); G && cellEls.forEach(function(el){ el._keep = ''; }); renderHome(); show('home'); }
 $('gBack').onclick = function(){ if (TUT) exitTut(); else goHome(); };
+
+/* ---------- the cat (lives in the empty band above the board) ---------- */
+var CAT_AWAKE = ["X......X..","XX....XX..","XXXXXXXX..","XEXXXXEX..","XEXXXXEX.X",".XXXXXX..X",".XXXXXXXXX",".X.X..X.X."];
+var CAT_SLEEP = ["X......X..","XX....XX..","XXXXXXXX..","XXXXXXXX..","XEEXXEEX.X",".XXXXXX..X",".XXXXXXXXX",".X.X..X.X."];
+var CAT = {on:false, sc:5, x:0, w:0, maxX:0, state:'idle', last:Date.now(), walkT:null};
+function catSvg(map){
+  var s = '<svg width="' + 10*CAT.sc + '" height="' + 8*CAT.sc + '" viewBox="0 0 10 8">';
+  for (var y = 0; y < 8; y++) for (var x = 0; x < 10; x++) { var ch = map[y][x]; if (ch !== '.') s += '<rect class="' + (ch === 'X' ? 'c' : 'e') + '" x="' + x + '" y="' + y + '" width="1.02" height="1.02"/>'; }
+  return s + '</svg>';
+}
+function catDraw(){ $('catSp').innerHTML = catSvg(CAT.state === 'sleep' ? CAT_SLEEP : CAT_AWAKE); }
+function catLayout(gap, width, bottom){
+  var st = $('catStage');
+  CAT.on = !!S.set.cat && gap >= 52;
+  st.style.display = CAT.on ? '' : 'none';
+  if (!CAT.on) return;
+  st.style.height = gap + 'px'; st.style.bottom = bottom + 'px'; st.style.top = 'auto';
+  var sc = Math.max(3, Math.min(7, Math.floor((gap - 20) / 8)));
+  if (sc !== CAT.sc || !$('catSp').firstChild) { CAT.sc = sc; catDraw(); }
+  CAT.w = 10 * CAT.sc; CAT.maxX = Math.max(0, width - CAT.w);
+  if (CAT.x > CAT.maxX) CAT.x = CAT.maxX;
+  $('catBox').style.left = CAT.x + 'px';
+}
+function catFx(txt, loop){
+  var f = $('catFx'); f.textContent = txt || ''; f.className = '';
+  if (!txt) return; void f.offsetWidth; f.className = loop ? 'loop' : 'on';
+}
+function catAnim(cls){ var b = $('catBody'); b.className = ''; void b.offsetWidth; if (cls) b.className = cls; }
+function catWake(){
+  CAT.last = Date.now();
+  if (CAT.state === 'sleep') { CAT.state = 'idle'; $('catBox').classList.remove('sleep'); catFx(''); catDraw(); }
+}
+function catPoke(kind){
+  if (!CAT.on) { CAT.last = Date.now(); return; }
+  catWake();
+  if (CAT.state === 'party' && kind !== 'reset') return;
+  if (kind === 'reset') { CAT.state = 'idle'; catAnim(''); catFx(''); return; }
+  if (kind === 'party') { CAT.state = 'party'; catAnim('party'); catFx('♪', true); return; }
+  if (kind === 'hop') { catAnim('hop'); }
+  else if (kind === 'shock') { catAnim('shock'); catFx('!'); }
+  else if (kind === 'think') { catAnim('think'); catFx('?'); }
+  else if (kind === 'pet') { catAnim('hop'); catFx('♪'); }
+}
+function catWalk(){
+  if (!CAT.on || CAT.state !== 'idle' || CAT.maxX < 20) return;
+  var to = Math.round(Math.random() * CAT.maxX), d = to - CAT.x;
+  if (Math.abs(d) < 24) return;
+  var box = $('catBox'), dur = Math.abs(d) / 28;
+  box.classList.toggle('flip', d < 0);
+  box.style.transitionDuration = dur + 's'; box.classList.add('walking');
+  box.style.left = to + 'px'; CAT.x = to;
+  clearTimeout(CAT.walkT); CAT.walkT = setTimeout(function(){ box.classList.remove('walking'); }, dur * 1000);
+}
+$('catBox').addEventListener('pointerdown', function(){ catPoke('pet'); });
+setInterval(function(){
+  if (!CAT.on || !$('game').classList.contains('on') || document.hidden) return;
+  if (CAT.state === 'idle' && Date.now() - CAT.last > 25000) {
+    CAT.state = 'sleep'; $('catBox').classList.add('sleep'); $('catBox').classList.remove('walking'); catDraw(); catFx('z', true); return;
+  }
+  if (CAT.state === 'idle' && !$('catBox').classList.contains('walking') && Math.random() < 0.18) catWalk();
+}, 1000);
 
 /* ---------- timer ---------- */
 function updateTime(){ $('gTime').textContent = (G && S.set.timer) ? '⏱ ' + fmt(G.time) : ''; }
