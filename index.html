@@ -605,6 +605,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.10.1', d:'2026-11-20', items:['💡チェックは何回でも使えます。使ったパズルはタイムが記録されないことを、クリア画面に表示するようにしました']},
   {v:'0.10.0', d:'2026-11-20', items:['↷ 「進む」ボタンを追加しました（「戻る」で戻した操作を、もう一度やり直せます）','💡 ヒントを「チェック」に変えました。押すと、まちがっている数字が赤く光ります']},
   {v:'0.9.1', d:'2026-11-20', items:['📲 ブラウザで開いたときは、最初にホーム画面への追加をご案内するようにしました（フルスクリーンで遊べます）']},
   {v:'0.9.0', d:'2026-11-20', items:['🎵 BGMをつけました。のんびりしたオルゴール風の曲です（設定で OFF・小・中・大）']},
@@ -1393,8 +1394,8 @@ function win(){
   render();
   setTimeout(function(){
     $('cTime').textContent = fmt(G.time);
-    $('cSub').textContent = n + '×' + n + ' ' + DIFF[G.diff] + ' Lv.' + G.level + (G.hints ? '　💡×' + G.hints : '') + (p.best ? '　ベスト ' + fmt(p.best) : '');
-    $('cRec').textContent = rec;
+    $('cSub').textContent = n + '×' + n + ' ' + DIFF[G.diff] + ' Lv.' + G.level + (G.hints ? '　💡チェック×' + G.hints : '') + (p.best ? '　ベスト ' + fmt(p.best) : '');
+    $('cRec').textContent = G.hints ? '💡チェックを使ったので、タイムは記録なし' : rec;
     openOv('clearOv');
   }, 900 + n*90);
 }
