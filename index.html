@@ -630,6 +630,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.12.5', d:'2026-11-20', items:['🐈 ♪♪を、旗付きの音符2つに変えました']},
   {v:'0.12.4', d:'2026-11-20', items:['🐈 ネコの♪もドット絵にしました']},
   {v:'0.12.3', d:'2026-11-20', items:['🐈 クリアのときの♪も、最後に右上へ1ドット動くようにしました']},
   {v:'0.12.2', d:'2026-11-20', items:['長いお知らせが画面からはみ出さないようにしました','💡チェックの残り回数を、アイコンの右上に表示するようにしました']},
@@ -1559,7 +1560,7 @@ function catLayout(gap, width, bottom, left){
 var catFxT = null;
 var CAT_HEART = [".##.##.","#..#..#","#.....#",".#...#.","..#.#..","...#..."];
 var CAT_NOTE = ["..#..","..##.","..#.#","..#..","###..","##..."];
-var CAT_NOTE2 = ["..#####","..#...#","..#...#","..#...#","###.###","##..##."];
+var CAT_NOTE2 = CAT_NOTE.map(function(r){ return r + "." + r; });   // two flagged notes side by side
 var CAT_PIXFX = {"♡":CAT_HEART, "♪":CAT_NOTE, "♪♪":CAT_NOTE2};
 function fxSet(f, txt){ if (CAT_PIXFX[txt]) f.innerHTML = catPix(CAT_PIXFX[txt]); else f.textContent = txt || ""; }
 function catPix(m){
