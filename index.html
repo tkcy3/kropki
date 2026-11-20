@@ -131,6 +131,8 @@ button:active{transform:scale(.95)}
 .numRow button.press{background:var(--numPress);border-color:var(--numPress);color:var(--pressTx);transform:scale(.92)}
 .memoRow button.press{background:var(--memoPress);border-color:var(--memoPress);transform:scale(.92)}
 .memoRow button.press span{color:var(--pressTx)}
+.memoRow button.on{background:var(--memoPress);border-color:var(--memoPress);opacity:1}
+.memoRow button.on span{color:var(--pressTx)}
 .tools button.press{background:var(--btn);transform:scale(.94)}
 button:active{transform:scale(.95)}
 /* cell feedback */
@@ -605,6 +607,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.10.2', d:'2026-11-20', items:['✏️ 選んだマスにメモしてある数字は、上の段の仮ボタンに色がついたままになるようにしました']},
   {v:'0.10.1', d:'2026-11-20', items:['💡チェックは何回でも使えます。使ったパズルはタイムが記録されないことを、クリア画面に表示するようにしました']},
   {v:'0.10.0', d:'2026-11-20', items:['↷ 「進む」ボタンを追加しました（「戻る」で戻した操作を、もう一度やり直せます）','💡 ヒントを「チェック」に変えました。押すと、まちがっている数字が赤く光ります']},
   {v:'0.9.1', d:'2026-11-20', items:['📲 ブラウザで開いたときは、最初にホーム画面への追加をご案内するようにしました（フルスクリーンで遊べます）']},
@@ -1084,7 +1087,8 @@ function render(){
   var cnt = new Array(n+1).fill(0);
   for (i = 0; i < N; i++) if (G.vals[i]) cnt[G.vals[i]]++;
   var nb = $('numRow').children, mb = $('memoRow').children;
-  for (var v2 = 1; v2 <= n; v2++) { nb[v2-1].classList.toggle('full', cnt[v2] >= n); mb[v2-1].classList.toggle('full', cnt[v2] >= n); }
+  var sm = (G.sel >= 0 && !G.done && !G.vals[G.sel]) ? G.memo[G.sel] : 0;
+  for (var v2 = 1; v2 <= n; v2++) { nb[v2-1].classList.toggle('full', cnt[v2] >= n); mb[v2-1].classList.toggle('full', cnt[v2] >= n); mb[v2-1].classList.toggle('on', !!(sm & (1 << (v2-1)))); }
   $('tUndo').classList.toggle('dis', !G.undo.length);
   $('tRedo').classList.toggle('dis', !(G.redo && G.redo.length));
 }
