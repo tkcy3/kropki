@@ -86,10 +86,10 @@ button:active{transform:scale(.95)}
 #catBody.shock{animation:catShock .48s steps(1)}
 @keyframes catShock{0%{transform:translate(0,-3px)}25%{transform:translate(-3px,0)}50%{transform:translate(3px,0)}75%{transform:translate(-3px,0)}100%{transform:translate(0,0)}}
 #catBox::before{content:'';position:absolute;left:-14px;right:-14px;top:-16px;bottom:-6px}
-#catFx{position:absolute;left:85%;top:-17px;font-size:15px;font-weight:800;line-height:1;color:var(--catInk);opacity:0;pointer-events:none;white-space:nowrap}
-#catFx.on{animation:catFx 1.8s steps(1)}
-#catFx.snore{opacity:1}
-@keyframes catFx{0%{opacity:1;transform:translate(0,0)}35%{opacity:1;transform:translate(2px,-3px)}70%{opacity:1;transform:translate(4px,-6px)}100%{opacity:0}}
+#catFx{position:absolute;left:85%;top:-17px;font-size:15px;font-weight:800;line-height:1;color:var(--catInk);pointer-events:none;white-space:nowrap}
+#catFx.on{animation:catFx 1.8s steps(1) forwards}
+#catFx.snore{opacity:.4;font-weight:700}
+@keyframes catFx{0%{transform:translate(0,0)}35%{transform:translate(2px,-3px)}70%{transform:translate(4px,-6px)}100%{transform:translate(4px,-6px)}}
 @media (prefers-reduced-motion:reduce){#catBody,#catFx{animation:none!important}}
 .memo{position:absolute;inset:0;font-size:calc(var(--cs) * var(--mz,.28));color:var(--memo);font-weight:800;-webkit-text-stroke:.35px var(--memo);paint-order:stroke fill}
 .memo span{position:absolute;transform:translate(-50%,-50%);line-height:1}
@@ -578,6 +578,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.8.1', d:'2026-11-20', items:['🐈‍⬛ スマホの「アニメーションを減らす」設定がONでも、ねこをタップすると「♡」が出るようにしました','🐈‍⬛ 寝息を「zzz」と小さめの文字で、薄く表示するようにしました']},
   {v:'0.8.0', d:'2026-11-20', items:['🐈‍⬛ ねこの「♡」や寝息「zZ」を大きく見やすくしました。ねこをタップしやすくしました']},
   {v:'0.7.9', d:'2026-11-20', items:['ホーム画面のアイコンを新しくしました']},
     {v:'0.7.8', d:'2026-11-20', items:['ミス表示「ルール」で、正しい数字まで赤くなっていたのを直しました。赤くなるのは間違っている数字だけです']},
@@ -1372,9 +1373,12 @@ function catLayout(gap, width, bottom, left){
   if (CAT.x > CAT.maxX) CAT.x = CAT.maxX;
   catDraw();
 }
+var catFxT = null;
 function catFx(txt, loop){
-  var f = $('catFx'); f.textContent = txt || ''; f.className = '';
-  if (!txt) return; void f.offsetWidth; f.className = loop ? 'snore' : 'on';
+  var f = $('catFx'); clearTimeout(catFxT); f.textContent = txt || ''; f.className = '';
+  if (!txt) return; void f.offsetWidth;
+  if (!loop) { f.className = 'on'; catFxT = setTimeout(function(){ f.textContent = ''; f.className = ''; }, 1800); }
+  else f.className = 'snore';
 }
 function catReact(m, fx, ticks){ CAT.react = {m:m, until:CAT.tick + ticks}; catFx(fx); catDraw(); }
 function catWake(){
@@ -1399,7 +1403,7 @@ setInterval(function(){  // one tick = 180 ms
   CAT.tick++;
   var redraw = false;
   if (CAT.react && CAT.tick >= CAT.react.until) { CAT.react = null; redraw = true; }
-  if (CAT.state === 'sleep' && !CAT.react && CAT.tick % 4 === 0) $('catFx').textContent = ['z', 'zZ', 'zZz', ''][(CAT.tick / 4) % 4];
+  if (CAT.state === 'sleep' && !CAT.react && CAT.tick % 4 === 0) $('catFx').textContent = ['z', 'zz', 'zzz', ''][(CAT.tick / 4) % 4];
   if (CAT.state === 'party' && CAT.tick % 4 === 0) $('catFx').textContent = (CAT.tick / 4) % 2 ? '♪' : '♪♪';
   if (CAT.blink > 0) { CAT.blink--; redraw = true; }
   if (CAT.state === 'sit' && !CAT.react) {
