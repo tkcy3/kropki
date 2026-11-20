@@ -630,6 +630,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.13.1', d:'2026-11-20', items:['🐈 クリアした問題を開いたときも、ネコが♪で歌っています']},
   {v:'0.13.0', d:'2026-11-20', items:['🖼 クリアした問題は、開くと解き終わった盤面がそのまま見られます。リセットを押すと最初から解き直せます','解き直し中の問題も、一覧で緑のまま表示します']},
   {v:'0.12.6', d:'2026-11-20', items:['🐈 ♪♪の2つ目を1ドット左に寄せました']},
   {v:'0.12.5', d:'2026-11-20', items:['🐈 ♪♪を、旗付きの音符2つに変えました']},
@@ -980,7 +981,7 @@ function startGame(nn, d, lv){
   var k = key(nn, d, lv), g = S.games[k], pr = prog(nn, d);
   if ((!g || g.done) && pr.lv[lv] !== undefined) {   // cleared: show the finished board (not saved; it is just the answer)
     g = newGameState(nn, d, lv); g.vals = g.p.sol.slice(); g.done = true; g.time = pr.lv[lv] || 0;
-    show('game'); loadGame(g); requestAnimationFrame(layout);
+    show('game'); loadGame(g); requestAnimationFrame(layout); catPoke('party');
     toast('クリア済み。リセットで解き直せます');
     return;
   }
