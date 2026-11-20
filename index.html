@@ -628,6 +628,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.12.1', d:'2026-11-20', items:['📋 コピー中の案内を1行にして、盤面の下の行が隠れないようにしました']},
   {v:'0.12.0', d:'2026-11-20', items:['📋 メモの入ったマスを長押しするとコピー。続けてタップしたマスに同じメモを貼り付けられます（「終わる」で終了）']},
   {v:'0.11.1', d:'2026-11-20', items:['🗂 問題一覧に、盤面の進み具合を小さな図で表示するようにしました','ホームの「つづき」をなくしました（問題一覧から再開できます）']},
   {v:'0.11.0', d:'2026-11-20', items:['🗂 各サイズ・難しさに100問。どの問題からでも選んで遊べます','💾 途中の問題は、数に制限なく全部そのまま残ります','💡 チェックは1問3回まで。使ってもタイムは記録されます','⟲ リセットするとタイムも0に戻ります']},
@@ -1173,7 +1174,7 @@ function startCopy(i){
   COPY = {m:G.memo[i], src:i};
   try { navigator.vibrate && navigator.vibrate(15); } catch(e) {}
   mark(i); G.sel = i;
-  showMsg('📋 <b>' + memoTxt(COPY.m) + '</b> をコピー<br><small>タップしたマスに貼り付けます</small>', [{t:'終わる', f:endCopy}]);
+  showMsg('📋 タップしたマスにコピーします', [{t:'終わる', f:endCopy}]);
   render();
 }
 function pasteCopy(i){
