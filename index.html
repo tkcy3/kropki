@@ -578,7 +578,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
-  {v:'0.8.1', d:'2026-11-20', items:['🐈‍⬛ スマホの「アニメーションを減らす」設定がONでも、ねこをタップすると「♡」が出るようにしました','🐈‍⬛ 寝息を「zzz」と小さめの文字で、薄く表示するようにしました','🐈‍⬛ 「♡」や寝息を、ねこの頭のすぐ上に出すようにしました']},
+  {v:'0.8.1', d:'2026-11-20', items:['🐈‍⬛ スマホの「アニメーションを減らす」設定がONでも、ねこをタップすると「♡」が出るようにしました','🐈‍⬛ 寝息を「zzz」と小さめの文字で、薄く表示するようにしました','🐈‍⬛ 「♡」や寝息を、ねこの頭のすぐ上に出すようにしました','🐈‍⬛ ハートをドット絵にしました。寝息はのんびり出るようにしました']},
   {v:'0.8.0', d:'2026-11-20', items:['🐈‍⬛ ねこの「♡」や寝息「zZ」を大きく見やすくしました。ねこをタップしやすくしました']},
   {v:'0.7.9', d:'2026-11-20', items:['ホーム画面のアイコンを新しくしました']},
     {v:'0.7.8', d:'2026-11-20', items:['ミス表示「ルール」で、正しい数字まで赤くなっていたのを直しました。赤くなるのは間違っている数字だけです']},
@@ -1336,7 +1336,7 @@ var CAT_TILT1 = ["..............","..............","............#.",".#.........
 var CAT_TILT2 = ["..............","..............","............#.","......#.....#.",".##..##.....#.",".############.",".###########..",".##.########..","..####.#..#.#."];
 function catShut(m){ var r = m.slice(); r[3] = '#####' + r[3].slice(5); return r; }
 function catEarsBack(m){ var r = m.slice(); r[0] = '..........'; r[1] = '#...#' + r[1].slice(5); return r; }
-var CAT = {on:false, sc:2, peekT:0, x:0, maxX:0, dir:-1, to:0, state:'sit', tail:0, frame:0, tick:0, blink:0, react:null, last:Date.now()};
+var CAT = {on:false, sc:2, peekT:0, sleepAt:0, x:0, maxX:0, dir:-1, to:0, state:'sit', tail:0, frame:0, tick:0, blink:0, react:null, last:Date.now()};
 function catSprite(){
   if (CAT.state === 'peek') {
     var p = CAT.peekT;
@@ -1376,8 +1376,15 @@ function catLayout(gap, width, bottom, left){
   catDraw();
 }
 var catFxT = null;
+var CAT_HEART = [".##.##.","#..#..#","#.....#",".#...#.","..#.#..","...#..."];
+function catPix(m){
+  var w = m[0].length, h = m.length, s = '<svg width="' + w*CAT.sc + '" height="' + h*CAT.sc + '" viewBox="0 0 ' + w + ' ' + h + '" style="display:block;shape-rendering:crispEdges">';
+  for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) if (m[y][x] === '#') s += '<rect x="' + x + '" y="' + y + '" width="1.02" height="1.02" fill="var(--catInk)"/>';
+  return s + '</svg>';
+}
 function catFx(txt, loop){
   var f = $('catFx'); clearTimeout(catFxT); f.textContent = txt || ''; f.className = '';
+  if (txt === '♡') f.innerHTML = catPix(CAT_HEART);
   if (!txt) return; void f.offsetWidth;
   if (!loop) { f.className = 'on'; catFxT = setTimeout(function(){ f.textContent = ''; f.className = ''; }, 1800); }
   else f.className = 'snore';
@@ -1405,11 +1412,14 @@ setInterval(function(){  // one tick = 180 ms
   CAT.tick++;
   var redraw = false;
   if (CAT.react && CAT.tick >= CAT.react.until) { CAT.react = null; redraw = true; }
-  if (CAT.state === 'sleep' && !CAT.react && CAT.tick % 4 === 0) $('catFx').textContent = ['z', 'zz', 'zzz', ''][(CAT.tick / 4) % 4];
+  if (CAT.state === 'sleep' && !CAT.react) {
+    var st = CAT.tick - CAT.sleepAt;   // ticks since dozing off (1 tick = 180 ms)
+    if (st >= 22 && (st - 22) % 9 === 0) $('catFx').textContent = ['z', 'zz', 'zzz', '', ''][((st - 22) / 9) % 5];
+  }
   if (CAT.state === 'party' && CAT.tick % 4 === 0) $('catFx').textContent = (CAT.tick / 4) % 2 ? '♪' : '♪♪';
   if (CAT.blink > 0) { CAT.blink--; redraw = true; }
   if (CAT.state === 'sit' && !CAT.react) {
-    if (Date.now() - CAT.last > 8000) { CAT.state = 'sleep'; catFx('z', true); catDraw(); return; }
+    if (Date.now() - CAT.last > 8000) { CAT.state = 'sleep'; CAT.sleepAt = CAT.tick; catFx(' ', true); catDraw(); return; }
     if (CAT.tick % 5 === 0) { CAT.tail ^= 1; redraw = true; }
     if (CAT.tick % 23 === 0) { CAT.blink = 1; redraw = true; }
     if (Math.random() < 0.003 && CAT.maxX > 30) {
