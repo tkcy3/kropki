@@ -147,6 +147,20 @@ button:active{transform:scale(.95)}
 .thumb i.u{background:var(--user)}
 .slotDel{flex:none;width:52px;padding:0;display:flex;align-items:center;justify-content:center;color:var(--err);border-color:var(--btn)}
 .slotDel svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hidden{display:none!important}
+#a2hChip{display:flex;width:min(86vw,340px);margin:22px auto 0;border:2px solid var(--btn);border-radius:14px;background:var(--panel);overflow:hidden;text-align:left}
+#a2hChip button{background:none;border:0;border-radius:0}
+#a2hGo{flex:1;display:flex;align-items:center;gap:10px;padding:10px 12px}
+#a2hGo span{font-size:24px}#a2hGo b{flex:1;font-size:16px}#a2hGo small{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:2px}#a2hGo i{font-style:normal;color:var(--muted);font-size:20px}
+#a2hX{width:48px;border-left:1px solid var(--btn)!important;color:var(--muted);font-size:16px}
+.a2g{display:flex;gap:8px;margin:4px 0 16px}
+.a2g div{flex:1;text-align:center;border:2px solid var(--btn);border-radius:12px;padding:10px 4px;font-size:15px}
+.a2g span{display:block;font-size:26px;margin-bottom:4px}
+.a2h{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:6px 0}
+.a2h b{border:2px solid var(--num);border-radius:10px;padding:8px 12px;font-size:17px}
+.a2h i{font-style:normal;color:var(--muted);font-size:20px}
+.a2note{text-align:center;font-size:14px;color:var(--muted);margin:6px 0 0}
+button.plain{padding:8px 12px;font-size:15px}
 .closeBtn{width:100%;height:56px;font-size:20px;font-weight:700;margin-top:14px}
 .ver{color:var(--muted);font-size:14px;text-align:center;margin-top:10px}
 .notes{font-size:15px;color:var(--muted);line-height:1.6;margin:6px 0 0;padding-left:20px}
@@ -191,6 +205,7 @@ button:active{transform:scale(.95)}
     <h1>KROPKI</h1>
     <div class="dots"><i></i><i class="b"></i><i></i><i class="b"></i></div>
     <div id="homeStat" style="margin-top:22px;font-size:18px;color:var(--muted)"></div>
+    <div id="a2hChip" class="hidden"><button id="a2hGo"><span>📲</span><b>ホーム画面に追加<small>全画面ですぐ遊べる</small></b><i>›</i></button><button id="a2hX" aria-label="閉じる">✕</button></div>
   </div>
   <div class="homeBody">
     <button class="cont" id="contBtn"></button>
@@ -233,7 +248,9 @@ button:active{transform:scale(.95)}
   <div class="row">記録<span id="statLine" style="font-size:15px;color:var(--muted)"></span></div>
   <div class="row">更新内容<span></span></div>
   <ul class="notes" id="notes"></ul>
-  <div class="row" style="border:none">データ初期化<button class="danger" id="resetBtn">リセット</button></div>
+  <div class="row" id="a2hRow">ホーム画面に追加<button class="plain" id="a2hSet">📲 追加 ›</button></div>
+  <div class="row">記録のリセット<button class="danger" id="resetBtn">リセット</button></div>
+  <div class="row" style="border:none">すべて初期化<button class="danger" id="wipeBtn">初期化</button></div>
   <div class="ver" id="ver"></div>
   <button class="closeBtn" data-close>閉じる</button>
 </div></div>
@@ -255,6 +272,14 @@ button:active{transform:scale(.95)}
 <div class="ov" id="contOv"><div class="sheet">
   <h2>どれを続けますか？</h2>
   <div id="contList"></div>
+  <button class="closeBtn" data-close>閉じる</button>
+</div></div>
+
+<!-- ADD TO HOME SCREEN -->
+<div class="ov" id="a2hOv"><div class="sheet">
+  <h2>📲 ホーム画面に追加</h2>
+  <div class="a2g"><div><span>📱</span>全画面</div><div><span>⚡</span>すぐ起動</div><div><span>💾</span>記録もそのまま</div></div>
+  <div id="a2hSteps"></div>
   <button class="closeBtn" data-close>閉じる</button>
 </div></div>
 
@@ -518,8 +543,8 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 </script>
 <script>
 (function(){
-var VERSION = '0.4.0';
-var NOTES = ['0.4.0 途中のゲームを3つまで保存。「つづき」から選んで再開、不要なものは消せる','0.3.4 プレイ中に「？」から始めたチュートリアルは、終わると元のゲームに戻るように','0.3.3 盤面を左右と下の余白いっぱいまで拡大（枠は細いまま）。案内欄はボタンの上に重ねて表示','0.3.2 案内欄の×ボタンを廃止（チュートリアルは左上の◀でやめる、ヒントは最後に「閉じる」）','0.3.1 盤面を画面幅いっぱいに。左右の端を上のボタン・下のボタンとそろえた','0.3.0 ヒントを「場所→理由→数字」の3段階に（自動では入れない）。チュートリアル追加。消しゴムアイコン、全メモ廃止、ボタン順を変更','0.2.4 リセットボタンを追加（盤面を最初の状態に戻す・戻すボタンで取り消し可）','0.2.3 黒丸＝差1、白丸＝2倍に入れ替え（設定「点の意味」で元に戻せます）','0.2.2 メモの数字を縦横そろった3×3の並びに（点にも重ならない位置）','0.2.1 色を落ち着いたトーンに変更（目にやさしい紙色が標準、暗い画面は真っ黒をやめてチャコール）','0.2.0 カラーデザインに変更。ボタンを押している間は色が変わり、数字を入れた・消したマスが光るように','0.1.4 メモボタンと数字ボタンの幅・位置をそろえた','0.1.3 メモの数字が点に隠れないよう配置を変更、点を少し小さく','0.1.2 数字を大きく太く・見やすい色に。設定に「数字の大きさ（大／特大）」を追加','0.1.1 黒丸・白丸の色を見た目どおりに修正（黒丸＝中が黒、白丸＝中が白）','0.1.0 はじめての版：4×4〜9×9、4段階の難しさ、レベル無限、メモ、ヒント、自動セーブ'];
+var VERSION = '0.5.0';
+var NOTES = ['0.5.0 ホーム画面に追加の案内（GitHub版）。設定に「すべて初期化」を追加','0.4.0 途中のゲームを3つまで保存。「つづき」から選んで再開、不要なものは消せる','0.3.4 プレイ中に「？」から始めたチュートリアルは、終わると元のゲームに戻るように','0.3.3 盤面を左右と下の余白いっぱいまで拡大（枠は細いまま）。案内欄はボタンの上に重ねて表示','0.3.2 案内欄の×ボタンを廃止（チュートリアルは左上の◀でやめる、ヒントは最後に「閉じる」）','0.3.1 盤面を画面幅いっぱいに。左右の端を上のボタン・下のボタンとそろえた','0.3.0 ヒントを「場所→理由→数字」の3段階に（自動では入れない）。チュートリアル追加。消しゴムアイコン、全メモ廃止、ボタン順を変更','0.2.4 リセットボタンを追加（盤面を最初の状態に戻す・戻すボタンで取り消し可）','0.2.3 黒丸＝差1、白丸＝2倍に入れ替え（設定「点の意味」で元に戻せます）','0.2.2 メモの数字を縦横そろった3×3の並びに（点にも重ならない位置）','0.2.1 色を落ち着いたトーンに変更（目にやさしい紙色が標準、暗い画面は真っ黒をやめてチャコール）','0.2.0 カラーデザインに変更。ボタンを押している間は色が変わり、数字を入れた・消したマスが光るように','0.1.4 メモボタンと数字ボタンの幅・位置をそろえた','0.1.3 メモの数字が点に隠れないよう配置を変更、点を少し小さく','0.1.2 数字を大きく太く・見やすい色に。設定に「数字の大きさ（大／特大）」を追加','0.1.1 黒丸・白丸の色を見た目どおりに修正（黒丸＝中が黒、白丸＝中が白）','0.1.0 はじめての版：4×4〜9×9、4段階の難しさ、レベル無限、メモ、ヒント、自動セーブ'];
 var DIFF = ['やさしい','ふつう','むずかしい','鬼'];
 var DSTAR = ['★','★★','★★★','👹'];
 var PC = KCORE.PC;
@@ -538,7 +563,8 @@ var KEY = 'kropki-save-v1';
 var S = null;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
 if (!S || typeof S !== 'object') S = {};
-S.set = Object.assign({theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1}, S.set || {});
+function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1}; }
+S.set = Object.assign(defaultSet(), S.set || {});
 S.prog = S.prog || {};
 if (!S.set.calm) { S.set.calm = 1; S.set.theme = 'light'; }
 S.games = S.games || {};
@@ -599,17 +625,51 @@ function renderSettings(){
   $('notes').innerHTML = NOTES.map(function(n){ return '<li>' + n + '</li>'; }).join('');
   $('ver').textContent = 'KROPKI v' + VERSION;
 }
-$('hSet').onclick = function(){ renderSettings(); openOv('setOv'); };
+$('hSet').onclick = function(){ renderSettings(); refreshA2H(); openOv('setOv'); };
 function openHelp(){ S.set.helped = 1; save(); openOv('helpOv'); }
 $('hHelp').onclick = $('gHelp').onclick = openHelp;
 $('resetBtn').onclick = function(){
-  confirmBox('全部の記録を消しますか？', function(){
-    S.prog = {}; S.games = {}; S.last = null; save(true); closeOv('setOv'); renderHome();
+  closeOv('setOv');
+  confirmBox('クリア記録と途中のゲームを消しますか？（設定はそのまま）', function(){
+    S.prog = {}; S.games = {}; S.last = null; save(true); renderHome(); toast('記録をリセットしました');
+  });
+};
+$('wipeBtn').onclick = function(){
+  closeOv('setOv');
+  confirmBox('記録・途中のゲーム・設定をすべて消して、最初の状態に戻しますか？', function(){
+    var a2h = S.a2h;
+    S = {set:defaultSet(), prog:{}, games:{}, last:null, a2h:a2h};
+    save(true); applyTheme(); updateHelp(); renderHome(); openHelp();
   });
 };
 
+/* ---------- add to home screen (GitHub Pages only) ---------- */
+var A2H = null;
+function canInstall(){ return /github\.io$/.test(location.hostname) || location.protocol === 'https:' && !/claude|anthropic|claudeusercontent/.test(location.hostname); }
+function isApp(){ try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch(e) { return false; } }
+function refreshA2H(){
+  var tot = 0; for (var k in S.prog) tot += S.prog[k].cnt || 0;
+  $('a2hChip').classList.toggle('hidden', !canInstall() || isApp() || !!S.a2h || tot < 1);
+  $('a2hRow').classList.toggle('hidden', !canInstall() || isApp());
+}
+addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); A2H = e; refreshA2H(); });
+addEventListener('appinstalled', function(){ A2H = null; S.a2h = 1; save(); refreshA2H(); });
+function showAddHome(){
+  S.a2h = 1; save(); refreshA2H(); closeOv('setOv');
+  if (A2H) { var e = A2H; A2H = null; e.prompt(); e.userChoice.then(function(){ refreshA2H(); }).catch(function(){}); return; }
+  var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  $('a2hSteps').innerHTML = ios
+    ? '<div class="a2h"><b>⬆️ 共有</b><i>›</i><b>➕ ホーム画面に追加</b></div><p class="a2note">Safariの下の ⬆️ から</p>'
+    : '<div class="a2h"><b>⋮</b><i>›</i><b>📲 ホーム画面に追加</b></div><p class="a2note">Chromeの右上 ⋮ から</p>';
+  openOv('a2hOv');
+}
+$('a2hGo').onclick = showAddHome;
+$('a2hSet').onclick = showAddHome;
+$('a2hX').onclick = function(){ S.a2h = 1; save(); refreshA2H(); };
+
 /* ---------- home ---------- */
 function renderHome(){
+  refreshA2H();
   var d = S.set.diff, tot = 0;
   for (var pk in S.prog) tot += S.prog[pk].cnt || 0;
   $('homeStat').textContent = tot ? '🏆 ' + tot : '';
@@ -1180,5 +1240,6 @@ applyTheme(); updateHelp(); renderHome(); save();
 if (!S.set.helped) openHelp();
 })();
 </script>
+<script>if('serviceWorker' in navigator&&location.protocol==='https:'){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 </body>
 </html>
