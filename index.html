@@ -283,6 +283,7 @@ button.plain{padding:8px 12px;font-size:15px}
 <div class="ov" id="helpOv"><div class="sheet">
   <h2>遊び方</h2>
   <button class="closeBtn" id="tutBtn" style="margin:0 0 6px;background:var(--num);border-color:var(--num);color:var(--numTx)">▶ チュートリアルで体験する</button>
+  <button class="closeBtn" id="helpSet" style="margin:0 0 6px">⚙ 設定</button>
   <div class="ex"><div class="mini"><div>3</div><div>1</div><div>2</div></div><p>行と列に同じ数字は1回だけ</p></div>
   <div class="ex"><div class="mini"><div>3</div><div>4</div><i id="hd1"></i></div><p><span id="hn1"></span> ＝ 差が1<small>3と4、5と6 など</small></p></div>
   <div class="ex"><div class="mini"><div>3</div><div>6</div><i id="hd2"></i></div><p><span id="hn2"></span> ＝ 2倍<small>2と4、3と6 など</small></p></div>
@@ -576,6 +577,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.7.6', d:'2026-11-20', items:['遊んでいる途中でも、右上の「？」から設定を開けるようにしました']},
   {v:'0.7.5', d:'2026-11-20', items:['🐈‍⬛ ねこの体つきとしっぽを見直し、端では小首をかしげて下をのぞくようにしました']},
   {v:'0.7.4', d:'2026-11-20', items:['🐈‍⬛ ねこが盤面の端まで行くと、ときどき下をのぞき込むようになりました']},
   {v:'0.7.3', d:'2026-11-20', items:['🐈‍⬛ ねこを小さくしました']},
@@ -1260,6 +1262,7 @@ function tutGuard(kind, v){
   return true;
 }
 $('tutBtn').onclick = startTutorial;
+$('helpSet').onclick = function(){ closeOv('helpOv'); renderSettings(); refreshA2H(); openOv('setOv'); };
 
 function after(){
   if (HINT) endHint();
