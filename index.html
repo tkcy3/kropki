@@ -319,6 +319,7 @@ button.plain{padding:8px 12px;font-size:15px}
   <div class="ex"><div class="mini"><div>2</div><div>5</div></div><p>点なし ＝ 差1でも2倍でもない<small>点は全部表示されている</small></p></div>
   <div class="ex"><div class="mini"><div>1</div><div>2</div><i></i></div><p>1と2は 白丸でも黒丸でもOK</p></div>
   <div class="ex" style="border:none"><p style="font-size:17px">上の段 ＝ メモ ／ 下の段 ＝ 数字<small>同じ数字をもう一度押すと消えます</small></p></div>
+  <div class="ex" style="border:none"><p style="font-size:17px">メモのマスを長押し ＝ コピー<small>続けてタップしたマスに、同じメモを貼り付け</small></p></div>
   <button class="closeBtn" data-close>OK</button>
 </div></div>
 
@@ -627,6 +628,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.12.0', d:'2026-11-20', items:['📋 メモの入ったマスを長押しするとコピー。続けてタップしたマスに同じメモを貼り付けられます（「終わる」で終了）']},
   {v:'0.11.1', d:'2026-11-20', items:['🗂 問題一覧に、盤面の進み具合を小さな図で表示するようにしました','ホームの「つづき」をなくしました（問題一覧から再開できます）']},
   {v:'0.11.0', d:'2026-11-20', items:['🗂 各サイズ・難しさに100問。どの問題からでも選んで遊べます','💾 途中の問題は、数に制限なく全部そのまま残ります','💡 チェックは1問3回まで。使ってもタイムは記録されます','⟲ リセットするとタイムも0に戻ります']},
   {v:'0.10.2', d:'2026-11-20', items:['✏️ 選んだマスにメモしてある数字は、上の段の仮ボタンに色がついたままになるようにしました']},
@@ -976,7 +978,7 @@ function startGame(nn, d, lv){
 }
 function loadGame(g){
   catPoke('reset');
-  G = g; n = g.n; N = n*n; HINT = null; CHK = null; if (!g.redo) g.redo = []; clearMark(); clearMsg();
+  G = g; n = g.n; N = n*n; HINT = null; CHK = null; COPY = null; if (!g.redo) g.redo = []; clearMark(); clearMsg();
   ctx = KCORE.makeCtx(n, {h:g.p.h, v:g.p.v});
   adj = []; for (var i = 0; i < N; i++) adj.push([]);
   for (var e = 0; e < ctx.ea.length; e++) {
@@ -1160,12 +1162,44 @@ function animCell(i, cls, ghost){
   el._animT = setTimeout(function(){ el._anim = ''; var gg = el.querySelector('.ghost'); if (gg) gg.remove(); render(); }, 480);
 }
 /* ---------- input ---------- */
+/* long-press a cell with memos = copy them; then every tapped cell gets the same memos */
+var COPY = null, lpT = null, lpXY = null;
+function endCopy(){ if (!COPY) return; COPY = null; clearMark(); clearMsg(); if (G) render(); }
+function memoTxt(m){ var a = []; for (var k = 1; k <= n; k++) if (m & (1 << (k-1))) a.push(k); return a.join('・'); }
+function startCopy(i){
+  if (!G || G.done || TUT) return;
+  if (G.vals[i] || !G.memo[i]) { toast('メモの入ったマスを長押しするとコピーできます'); return; }
+  if (HINT) endHint(); if (CHK) endCheck();
+  COPY = {m:G.memo[i], src:i};
+  try { navigator.vibrate && navigator.vibrate(15); } catch(e) {}
+  mark(i); G.sel = i;
+  showMsg('📋 <b>' + memoTxt(COPY.m) + '</b> をコピー<br><small>タップしたマスに貼り付けます</small>', [{t:'終わる', f:endCopy}]);
+  render();
+}
+function pasteCopy(i){
+  if (i === COPY.src || G.p.givens[i] || G.vals[i] || G.memo[i] === COPY.m) return;
+  pushUndo([snap(i)]); G.memo[i] = COPY.m;
+  if (!G.tut) G.last = Date.now();
+  render(); save(); animCell(i, 'mput');
+}
+$('board').addEventListener('contextmenu', function(e){ e.preventDefault(); });
 $('board').addEventListener('pointerdown', function(e){
   var t = e.target.closest('.cell'); if (!t || !G) return;
   var i = Number(t.dataset.i);
-  G.sel = i; render();
+  G.sel = i;
+  render();
   if (TUT) tutShow();
+  clearTimeout(lpT); lpXY = [e.clientX, e.clientY];
+  lpT = setTimeout(function(){ lpT = null; startCopy(i); }, 450);
 });
+// a short tap (not a long press) pastes while copying
+$('board').addEventListener('pointerup', function(e){
+  var t = e.target.closest('.cell'), short = !!lpT;
+  clearTimeout(lpT); lpT = null;
+  if (short && t && COPY && G && !G.done) pasteCopy(Number(t.dataset.i));
+});
+['pointercancel','pointerleave'].forEach(function(ev){ $('board').addEventListener(ev, function(){ clearTimeout(lpT); lpT = null; }); });
+$('board').addEventListener('pointermove', function(e){ if (lpT && lpXY && Math.abs(e.clientX - lpXY[0]) + Math.abs(e.clientY - lpXY[1]) > 12) { clearTimeout(lpT); lpT = null; } });
 function pushUndo(changes){ G.undo.push(changes); if (G.undo.length > 300) G.undo.shift(); G.redo = []; }
 function snap(i){ return {i:i, v:G.vals[i], m:G.memo[i]}; }
 function editable(){ return G && !G.done && G.sel >= 0 && !G.p.givens[G.sel]; }
@@ -1462,7 +1496,7 @@ $('cNext').onclick = function(){
   startGame(nn, d, nl);
 };
 $('cHome').onclick = function(){ closeOv('clearOv'); TUT = null; goHome(); };
-function goHome(){ TUT = null; HINT = null; clearMark(); clearMsg(); save(true); G && cellEls.forEach(function(el){ el._keep = ''; }); renderHome(); show('home'); }
+function goHome(){ TUT = null; HINT = null; COPY = null; clearMark(); clearMsg(); save(true); G && cellEls.forEach(function(el){ el._keep = ''; }); renderHome(); show('home'); }
 $('gBack').onclick = function(){ if (TUT) exitTut(); else goHome(); };
 
 /* ---------- the cat (lives in the empty band above the board) ----------
