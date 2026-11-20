@@ -155,6 +155,16 @@ button:active{transform:scale(.95)}
 .seg{display:flex;gap:6px}
 .seg button{padding:8px 10px;font-size:15px;border-color:var(--muted);color:var(--muted)}
 .seg button.on{border-color:var(--accent);color:var(--accent)}
+.lvGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+#lvStat{text-align:center;font-size:16px;color:var(--muted);margin:-4px 0 14px}
+.lvGrid button{height:64px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:var(--cell);border-color:var(--btn)}
+.lvGrid b{font-size:21px;font-weight:800}
+.lvGrid small{font-size:12.5px;color:var(--muted);min-height:1em}
+.lvGrid button.ok{background:color-mix(in srgb,var(--good) 16%,var(--cell))}
+.lvGrid button.ok small{color:var(--good)}
+.lvGrid button.go{border-color:var(--accent);border-width:2px}
+.lvGrid button.go small{color:var(--accent);font-weight:700}
+#chkN{color:var(--accent);font-weight:800}
 .slotRow{display:flex;gap:14px;align-items:stretch;margin-bottom:10px}
 .slot{flex:1;display:flex;align-items:center;gap:14px;padding:10px 12px;text-align:left;min-height:84px}
 .slot .tx{flex:1}
@@ -266,7 +276,7 @@ button.plain{padding:8px 12px;font-size:15px}
   <div class="msg" id="msg"></div>
   <div class="tools">
     <button id="tReset"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 3.5v4.2h4.2"/></svg><small>リセット</small></button>
-    <button id="tHint"><svg viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.2h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg><small>チェック</small></button>
+    <button id="tHint"><svg viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.2h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg><small>チェック<span id="chkN"></span></small></button>
     <button id="tErase"><svg viewBox="0 0 24 24"><path d="M4 15.2l9.2-9.2a2 2 0 0 1 2.8 0l3 3a2 2 0 0 1 0 2.8L12 19H7.8z"/><path d="M8.6 10.6l5.8 5.8"/><path d="M12 19h8"/></svg><small>消す</small></button>
     <button id="tUndo"><svg viewBox="0 0 24 24"><path d="M8.5 5L4 9.5 8.5 14"/><path d="M4 9.5h10.5a5 5 0 0 1 0 10H11"/></svg><small>戻る</small></button>
     <button id="tRedo"><svg viewBox="0 0 24 24"><g transform="matrix(-1 0 0 1 24 0)"><path d="M8.5 5L4 9.5 8.5 14"/><path d="M4 9.5h10.5a5 5 0 0 1 0 10H11"/></g></svg><small>進む</small></button>
@@ -344,6 +354,14 @@ button.plain{padding:8px 12px;font-size:15px}
   <p style="text-align:center;margin:0 0 6px"><span class="chip" id="chgVer"></span></p>
   <div class="chg" id="chgBody"></div>
   <button class="closeBtn" id="chgBack">戻る</button>
+</div></div>
+
+<!-- LEVEL SELECT -->
+<div class="ov" id="lvOv"><div class="sheet">
+  <h2 id="lvTitle"></h2>
+  <div id="lvStat"></div>
+  <div class="lvGrid" id="lvGrid"></div>
+  <button class="closeBtn" data-close>閉じる</button>
 </div></div>
 
 <!-- CONFIRM -->
@@ -607,6 +625,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.11.0', d:'2026-11-20', items:['🗂 各サイズ・難しさに100問。どの問題からでも選んで遊べます','💾 途中の問題は、数に制限なく全部そのまま残ります','💡 チェックは1問3回まで。使ってもタイムは記録されます','⟲ リセットするとタイムも0に戻ります']},
   {v:'0.10.2', d:'2026-11-20', items:['✏️ 選んだマスにメモしてある数字は、上の段の仮ボタンに色がついたままになるようにしました']},
   {v:'0.10.1', d:'2026-11-20', items:['💡チェックは何回でも使えます。使ったパズルはタイムが記録されないことを、クリア画面に表示するようにしました']},
   {v:'0.10.0', d:'2026-11-20', items:['↷ 「進む」ボタンを追加しました（「戻る」で戻した操作を、もう一度やり直せます）','💡 ヒントを「チェック」に変えました。押すと、まちがっている数字が赤く光ります']},
@@ -672,20 +691,39 @@ S.set = Object.assign(defaultSet(), S.set || {});
 S.prog = S.prog || {};
 if (!S.set.calm) { S.set.calm = 1; S.set.theme = 'light'; }
 S.games = S.games || {};
-var MAX_SLOTS = 3;
+var LVMAX = 100, CHKMAX = 3;
 function playing(){ // unfinished games, most recently played first
   return Object.keys(S.games).filter(function(k){ return S.games[k] && !S.games[k].done; })
     .sort(function(a, b){ return (S.games[b].last || (b === S.last ? 1 : 0)) - (S.games[a].last || (a === S.last ? 1 : 0)); });
 }
-(function(){ var pl = playing(); for (var i = MAX_SLOTS; i < pl.length; i++) delete S.games[pl[i]]; })();
+/* every puzzle keeps its own progress: games are keyed size-diff-level.
+   Older saves (one game per size/diff, levels opened in order) are carried over. */
+(function(){
+  Object.keys(S.games).forEach(function(k){
+    var g = S.games[k];
+    if (!g || g.done) { delete S.games[k]; return; }
+    if (k.split('-').length === 2) {
+      delete S.games[k];
+      if (g.level <= LVMAX) { var nk = key(g.n, g.diff, g.level); S.games[nk] = g; if (S.last === k) S.last = nk; }
+    }
+  });
+  for (var pk in S.prog) { var pp = S.prog[pk]; if (!pp.lv) { pp.lv = {}; for (var l = 1; l <= Math.min(pp.c || 0, LVMAX); l++) pp.lv[l] = 0; } }
+})();
 var saveT = null;
 function save(now){
   clearTimeout(saveT);
-  var f = function(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
+  var f = function(){
+    try { localStorage.setItem(KEY, JSON.stringify(S)); }
+    catch(e){ // storage full: drop the undo history of the games not on screen, keep their boards
+      for (var k in S.games) if (S.games[k] !== G) { S.games[k].undo = []; S.games[k].redo = []; }
+      try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e2){}
+    }
+  };
   if (now) f(); else saveT = setTimeout(f, 300);
 }
-function key(n,d){ return n + '-' + d; }
-function prog(n,d){ var k = key(n,d); if (!S.prog[k]) S.prog[k] = {c:0, best:0, cnt:0}; return S.prog[k]; }
+function key(n,d,lv){ return n + '-' + d + (lv ? '-' + lv : ''); }
+function prog(n,d){ var k = key(n,d); if (!S.prog[k]) S.prog[k] = {c:0, best:0, cnt:0, lv:{}}; if (!S.prog[k].lv) S.prog[k].lv = {}; return S.prog[k]; }
+function inProg(n,d){ var pre = key(n,d) + '-'; return playing().filter(function(k){ return k.indexOf(pre) === 0; }); }
 function fmt(t){ t = Math.floor(t); var h = Math.floor(t/3600), m = Math.floor(t/60)%60, s = t%60; return (h ? h + ':' + (m<10?'0':'') : '') + m + ':' + (s<10?'0':'') + s; }
 
 /* ---------- toast / overlays ---------- */
@@ -853,10 +891,9 @@ function renderHome(){
   });
   $('sizes').innerHTML = '';
   for (var n = 4; n <= 9; n++) (function(n){
-    var p = prog(n, d), g = S.games[key(n,d)], b = document.createElement('button');
-    var playing = g && !g.done;
-    b.innerHTML = '<b>' + n + '×' + n + '</b><small class="' + (playing ? 'go' : '') + '">' + (playing ? '▶ ' : '') + 'Lv.' + (playing ? g.level : p.c + 1) + '</small>';
-    b.onclick = function(){ startGame(n, d); };
+    var p = prog(n, d), ip = inProg(n, d).length, b = document.createElement('button');
+    b.innerHTML = '<b>' + n + '×' + n + '</b><small class="' + (ip ? 'go' : '') + '">' + (ip ? '▶ ' : '') + Object.keys(p.lv).length + ' / ' + LVMAX + '</small>';
+    b.onclick = function(){ openLevels(n, d); };
     $('sizes').appendChild(b);
   })(n);
   var pl = playing(), cb = $('contBtn');
@@ -864,7 +901,7 @@ function renderHome(){
     var one = S.games[pl[0]];
     cb.style.display = '';
     cb.innerHTML = '▶ つづき <small>' + one.n + '×' + one.n + ' ' + DIFF[one.diff] + ' Lv.' + one.level + '</small>';
-    cb.onclick = function(){ startGame(one.n, one.diff); };
+    cb.onclick = function(){ startGame(one.n, one.diff, one.level); };
   } else if (pl.length > 1) {
     cb.style.display = '';
     cb.innerHTML = '▶ つづき <small>' + pl.length + 'つから選ぶ</small>';
@@ -887,7 +924,7 @@ function openChooser(){
     var b = document.createElement('button'); b.className = 'slot';
     b.innerHTML = '<div class="thumb" style="grid-template-columns:repeat(' + g.n + ',1fr)">' + th + '</div>' +
       '<div class="tx"><b>' + g.n + '×' + g.n + ' ' + DIFF[g.diff] + ' Lv.' + g.level + '</b><small>⏱ ' + fmt(g.time) + '　' + Math.round(filled * 100 / (g.n*g.n)) + '%</small></div>';
-    b.onclick = function(){ closeOv('contOv'); startGame(g.n, g.diff); };
+    b.onclick = function(){ closeOv('contOv'); startGame(g.n, g.diff, g.level); };
     var del = document.createElement('button'); del.className = 'slotDel'; del.innerHTML = TRASH; del.setAttribute('aria-label', '消す');
     del.onclick = function(){
       closeOv('contOv');
@@ -899,6 +936,29 @@ function openChooser(){
   });
   openOv('contOv');
 }
+/* ---------- level select: all 100 puzzles are open ---------- */
+function openLevels(nn, d){
+  var p = prog(nn, d), grid = $('lvGrid'), first = null;
+  $('lvTitle').textContent = nn + '×' + nn + '　' + DIFF[d] + ' ' + DSTAR[d];
+  var cl = Object.keys(p.lv).length;
+  $('lvStat').textContent = 'クリア ' + cl + ' / ' + LVMAX + (p.best ? '　ベスト ' + fmt(p.best) : '');
+  grid.innerHTML = '';
+  for (var lv = 1; lv <= LVMAX; lv++) (function(lv){
+    var b = document.createElement('button'), g = S.games[key(nn, d, lv)], sub = '', cls = '';
+    if (g && !g.done) {
+      var f = 0, t = 0; for (var i = 0; i < g.n*g.n; i++) if (!g.p.givens[i]) { t++; if (g.vals[i]) f++; }
+      cls = 'go'; sub = '▶ ' + Math.round(f * 100 / Math.max(1, t)) + '%';
+    } else if (p.lv[lv] !== undefined) { cls = 'ok'; sub = p.lv[lv] ? fmt(p.lv[lv]) : '✓'; }
+    else if (!first) first = b;
+    if (cls === 'go' && !first) first = b;
+    b.className = cls;
+    b.innerHTML = '<b>' + lv + '</b><small>' + sub + '</small>';
+    b.onclick = function(){ closeOv('lvOv'); startGame(nn, d, lv); };
+    grid.appendChild(b);
+  })(lv);
+  openOv('lvOv');
+  if (first) requestAnimationFrame(function(){ first.scrollIntoView({block:'center'}); });
+}
 function show(id){
   ['home','game'].forEach(function(s){ $(s).classList.toggle('on', s === id); });
 }
@@ -908,23 +968,12 @@ var G = null, ctx = null, adj = null, N = 0, n = 0;
 function newGameState(nn, d, level){
   var p = KCORE.generate(nn, d, level), vals = [], memo = [];
   for (var i = 0; i < nn*nn; i++) { vals.push(p.givens[i] ? p.sol[i] : 0); memo.push(0); }
-  return { n:nn, diff:d, level:level, p:p, vals:vals, memo:memo, time:0, hints:0, undo:[], sel:-1, done:false };
+  return { n:nn, diff:d, level:level, p:p, vals:vals, memo:memo, time:0, hints:0, chk:0, undo:[], redo:[], sel:-1, done:false };
 }
-function startGame(nn, d, forceLevel){
-  TUT = null;
-  var k = key(nn, d), g = S.games[k];
-  if (forceLevel || !g || g.done) {
-    var pl = playing().filter(function(x){ return x !== k; });
-    if (pl.length >= MAX_SLOTS) {
-      var old = pl[pl.length-1], og = S.games[old];
-      confirmBox('途中のゲームは3つまで。いちばん古い「' + og.n + '×' + og.n + ' ' + DIFF[og.diff] + ' Lv.' + og.level + '」を消して始めますか？', function(){
-        delete S.games[old]; save(); startGame(nn, d, forceLevel);
-      });
-      return;
-    }
-    var lv = forceLevel || prog(nn, d).c + 1;
-    g = S.games[k] = newGameState(nn, d, lv);
-  }
+function startGame(nn, d, lv){
+  TUT = null; lv = lv || 1;
+  var k = key(nn, d, lv), g = S.games[k];
+  if (!g || g.done) g = S.games[k] = newGameState(nn, d, lv);
   g.last = Date.now();
   S.last = k; save();
   show('game');
@@ -1090,6 +1139,8 @@ function render(){
   var sm = (G.sel >= 0 && !G.done && !G.vals[G.sel]) ? G.memo[G.sel] : 0;
   for (var v2 = 1; v2 <= n; v2++) { nb[v2-1].classList.toggle('full', cnt[v2] >= n); mb[v2-1].classList.toggle('full', cnt[v2] >= n); mb[v2-1].classList.toggle('on', !!(sm & (1 << (v2-1)))); }
   $('tUndo').classList.toggle('dis', !G.undo.length);
+  var cl = G.tut ? CHKMAX : CHKMAX - (G.chk || 0);
+  $('chkN').textContent = G.tut ? '' : ' ' + cl; $('tHint').classList.toggle('dis', cl <= 0);
   $('tRedo').classList.toggle('dis', !(G.redo && G.redo.length));
 }
 function flashCell(i, cls){
@@ -1175,11 +1226,11 @@ $('tReset').onclick = function(){
   var ch = [];
   for (var i = 0; i < N; i++) if (!G.p.givens[i] && (G.vals[i] || G.memo[i])) ch.push(snap(i));
   if (!ch.length) { toast('まだ何も入っていません'); return; }
-  confirmBox('盤面を最初の状態に戻しますか？', function(){
+  confirmBox('盤面とタイムを最初の状態に戻しますか？', function(){
     for (var k = 0; k < ch.length; k++) { G.vals[ch[k].i] = 0; G.memo[ch[k].i] = 0; }
-    pushUndo(ch); G.sel = -1; after();
+    pushUndo(ch); G.sel = -1; G.time = 0; G.chk = 0; updateTime(); after();
     for (k = 0; k < ch.length; k++) animCell(ch[k].i, 'del');
-    toast('⟲ 最初の状態に戻しました（↶で取り消せます）');
+    toast('⟲ 最初の状態に戻しました（タイムも0に）');
   });
 };
 /* ---------- marks / message bar ---------- */
@@ -1278,11 +1329,12 @@ $('tHint').onclick = function(){
   if (!G || G.done) return;
   if (tutBlock()) return;
   if (CHK) { endCheck(); return; }
+  if ((G.chk || 0) >= CHKMAX) { toast('チェックは1問' + CHKMAX + '回までです'); return; }
   var wrong = 0, filled = 0, i;
   CHK = {};
   for (i = 0; i < N; i++) if (!G.p.givens[i] && G.vals[i]) { filled++; if (G.vals[i] !== G.p.sol[i]) { CHK[i] = 1; wrong++; } }
   if (!filled) { CHK = null; toast('まだ数字が入っていません'); return; }
-  G.hints++; save();
+  G.chk = (G.chk || 0) + 1; save();
   var left = 0; for (i = 0; i < N; i++) if (!G.vals[i]) left++;
   if (wrong) { catPoke('think'); showMsg('まちがいが <b>' + wrong + '個</b> あります', [{t:'閉じる', f:endCheck}]); }
   else { catPoke('hop'); showMsg('ここまで まちがいなし！ あと ' + left + 'マス', [{t:'閉じる', f:endCheck}]); }
@@ -1388,18 +1440,23 @@ function win(){
     }, 900);
     return;
   }
-  $('cNext').textContent = '次へ ▶';
+  $('cNext').textContent = G.level < LVMAX ? '次の問題へ ▶' : '問題を選ぶ ▶';
   var p = prog(n, G.diff), rec = '';
   p.cnt = (p.cnt || 0) + 1;
   if (G.level > p.c) p.c = G.level;
-  if (G.hints === 0 && (!p.best || G.time < p.best)) { if (p.best) rec = '🏆 ベスト更新！'; p.best = Math.floor(G.time); }
+  var t = Math.floor(G.time), lb = p.lv[G.level];
+  if (lb === undefined) rec = '';
+  else if (!lb || t < lb) rec = '🏆 この問題のベスト更新！';
+  if (lb === undefined || !lb || t < lb) p.lv[G.level] = t;
+  if (!p.best || t < p.best) { if (p.best && !rec) rec = '🏆 ベスト更新！'; p.best = t; }
+  delete S.games[key(n, G.diff, G.level)];
   save(true); render();
   for (var i = 0; i < N; i++) { var el = cellEls[i]; el.style.animationDelay = ((Math.floor(i/n) + i%n) * 45) + 'ms'; el._keep = 'wave'; }
   render();
   setTimeout(function(){
     $('cTime').textContent = fmt(G.time);
-    $('cSub').textContent = n + '×' + n + ' ' + DIFF[G.diff] + ' Lv.' + G.level + (G.hints ? '　💡チェック×' + G.hints : '') + (p.best ? '　ベスト ' + fmt(p.best) : '');
-    $('cRec').textContent = G.hints ? '💡チェックを使ったので、タイムは記録なし' : rec;
+    $('cSub').textContent = n + '×' + n + ' ' + DIFF[G.diff] + ' Lv.' + G.level + (p.lv[G.level] ? '　この問題のベスト ' + fmt(p.lv[G.level]) : '');
+    $('cRec').textContent = rec;
     openOv('clearOv');
   }, 900 + n*90);
 }
@@ -1407,7 +1464,8 @@ $('cNext').onclick = function(){
   if (G && G.tut) { closeOv('clearOv'); if (TUT && TUT.ret) { exitTut(); return; } TUT = null; S.set.diff = 0; startGame(4, 0); return; }
   closeOv('clearOv'); var nn = G.n, d = G.diff;
   cellEls.forEach(function(el){ el._keep = ''; el.style.animationDelay = ''; });
-  startGame(nn, d, prog(nn, d).c + 1);
+  var nl = G.level + 1; if (nl > LVMAX) { goHome(); openLevels(nn, d); return; }
+  startGame(nn, d, nl);
 };
 $('cHome').onclick = function(){ closeOv('clearOv'); TUT = null; goHome(); };
 function goHome(){ TUT = null; HINT = null; clearMark(); clearMsg(); save(true); G && cellEls.forEach(function(el){ el._keep = ''; }); renderHome(); show('home'); }
