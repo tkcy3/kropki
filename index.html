@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#e8e5de">
+<title>KROPKI</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+
+<style>
+:root{
+  --side:10px;
+  --bg:#25282d;--panel:#2e3238;--line:#4b5058;--frame:#9aa0a8;--cell:#2f3339;--fg:#e8e6e1;--given:#ecebe7;--user:#9cc2ec;--memo:#a7abb2;
+  --sel:#44597a;--hl:#363b43;--same:#3d4d63;--err:#ec8a80;--muted:#9a9fa7;--btn:#5b616a;--accent:#d9b25f;--good:#8cc79a;
+  --num:#4a5566;--numTx:#f1efe9;--numPress:#d9b25f;--memoBtn:#2e3238;--memoPress:#d9b25f;--pressTx:#2a2418;
+  --relbg:rgba(217,178,95,.2);--put:rgba(217,178,95,.35);--mput:rgba(217,178,95,.22);--del:rgba(236,138,128,.35);
+}
+body.light{
+  --bg:#e8e5de;--panel:#f6f4ef;--line:#bdb8ae;--frame:#5a5752;--cell:#f8f6f1;--fg:#2d2c2a;--given:#2b2a28;--user:#2f5a94;--memo:#6d6a65;
+  --sel:#f0d998;--hl:#ede9e0;--same:#d6e2ef;--err:#c4473b;--muted:#7a7670;--btn:#a9a49b;--accent:#a8741a;--good:#3d8a52;
+  --num:#56647a;--numTx:#f8f6f1;--numPress:#e3b95a;--memoBtn:#f3f0ea;--memoPress:#e3b95a;--pressTx:#2a2418;
+  --relbg:rgba(227,185,90,.3);--put:rgba(227,185,90,.45);--mput:rgba(227,185,90,.28);--del:rgba(196,71,59,.28);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden}
+body{font-family:"Segoe UI",Roboto,"Hiragino Sans","Noto Sans JP",sans-serif;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;background:var(--panel);border:2px solid var(--btn);border-radius:12px;cursor:pointer;touch-action:manipulation}
+button:active{transform:scale(.95)}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+#game{align-items:center}
+#game>*{width:100%;max-width:640px}
+.screen.on{display:flex}
+
+/* ---------- home ---------- */
+#home{align-items:center}
+.logo{margin-top:7vh;text-align:center}
+.logo h1{margin:0;font-size:46px;letter-spacing:6px;font-weight:900;color:var(--fg)}
+.logo .dots{display:flex;justify-content:center;gap:14px;margin-top:10px}
+.logo .dots i{width:16px;height:16px;border-radius:50%;border:3px solid var(--fg);display:block;background:#fff}
+.logo .dots i.b{background:#000}
+.homeTop{position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:10px;display:flex;gap:8px}
+.icoBtn{width:48px;height:48px;font-size:22px;display:flex;align-items:center;justify-content:center;padding:0}
+.homeBody{margin-top:auto;width:100%;max-width:520px;padding:0 14px 18px}
+.cont{width:100%;padding:14px;font-size:22px;font-weight:700;margin-bottom:16px;border-color:var(--num);background:var(--num);color:var(--numTx);display:flex;align-items:center;justify-content:center;gap:10px}
+.cont small{font-size:15px;font-weight:400;color:var(--numTx);opacity:.85}
+.diffs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.diffs button{padding:10px 2px;font-size:16px;font-weight:700;line-height:1.25;border-color:var(--btn);color:var(--muted);background:var(--panel)}
+.diffs button span{display:block;font-size:13px;letter-spacing:1px}
+.diffs button.on{border-color:var(--num);background:var(--num);color:var(--numTx)}
+.sizes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sizes button{height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--panel);border-color:var(--btn)}
+.sizes b{font-size:30px;font-weight:900}
+.sizes small{font-size:15px;color:var(--muted)}
+.sizes small.go{color:var(--accent)}
+
+/* ---------- game ---------- */
+.bar{display:flex;align-items:center;gap:8px;padding:8px var(--side);height:62px}
+.bar .title{flex:1;text-align:center;font-size:20px;font-weight:800;border:2px solid var(--btn);border-radius:12px;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;overflow:hidden}
+.bar .title .tm{font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted);font-size:17px}
+#boardWrap{flex:1;display:flex;align-items:flex-end;justify-content:center;min-height:0;padding:4px var(--side) 6px}
+#board{flex:none;position:relative;background:var(--line);border:3px solid var(--frame);border-radius:4px;box-shadow:0 3px 12px rgba(0,0,0,.15)}
+.cell{position:absolute;background:var(--cell);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs) * var(--fz,.74));line-height:1;color:var(--user);font-weight:800}
+.cell.g{color:var(--given);font-weight:800}
+.cell.hl{background:var(--hl)}
+.cell.same{background:var(--same)}
+.cell.rel{background:var(--relbg)}
+.cell.sel{background:var(--sel)}
+.cell.err{color:var(--err)}
+.cell.flash{animation:flash 1s ease}
+.cell.bad{animation:bad 1s ease}
+@keyframes flash{0%,40%{background:var(--accent);color:#000}100%{}}
+@keyframes bad{0%,40%{background:var(--err);color:#fff}100%{}}
+.cell.wave{animation:wave .7s ease both}
+@keyframes wave{0%{transform:scale(1)}40%{transform:scale(.6);background:var(--accent);color:#000}100%{transform:scale(1)}}
+.memo{position:absolute;inset:0;font-size:calc(var(--cs) * var(--mz,.28));color:var(--memo);font-weight:700}
+.memo span{position:absolute;transform:translate(-50%,-50%);line-height:1}
+.memo span.mm{color:var(--accent);font-weight:800}
+.dot{position:absolute;border-radius:50%;border:2px solid var(--fg);z-index:2;pointer-events:none}
+.dot.w{background:#fff}
+.dot.b{background:#000}
+.dot.hd{box-shadow:0 0 0 4px var(--accent)}
+.dot.err{border-color:var(--err);box-shadow:0 0 0 2px var(--err)}
+
+.tools{display:flex;justify-content:center;gap:8px;padding:4px var(--side) 8px}
+.tools button{flex:1 1 0;min-width:0;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:24px;line-height:1;gap:3px;padding:0}
+.tools button small{font-size:12px;color:var(--muted)}
+.tools svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+#tHint svg{color:var(--accent)}
+.cell.tgt{box-shadow:inset 0 0 0 4px var(--accent);animation:tgt 1.2s ease-in-out infinite}
+@keyframes tgt{50%{box-shadow:inset 0 0 0 7px var(--accent)}}
+.dock{position:relative}
+.msg{display:none;position:absolute;left:var(--side);right:var(--side);bottom:8px;min-height:58px;z-index:5;padding:6px 8px 6px 14px;border-radius:14px;align-items:center;gap:8px;font-size:16px;line-height:1.35;box-shadow:0 -4px 14px rgba(0,0,0,.12)}
+.msg.on{display:flex;background:var(--panel);border:2px solid var(--accent)}
+.msg .tx{flex:1}
+.msg .tx b{font-size:20px;color:var(--user)}
+.msg button small{display:block;font-size:11px;font-weight:500;opacity:.8;line-height:1}
+.msg .tx small{display:block;color:var(--muted);font-size:13px}
+.msg button{flex:none;height:46px;line-height:1.1;padding:0 14px;font-size:16px;font-weight:700}
+.msg button.go{background:var(--num);border-color:var(--num);color:var(--numTx)}
+.msg button.x{width:46px;padding:0;font-size:20px}
+.tools button.dis{opacity:.35}
+.pad{display:flex;justify-content:center;gap:6px;padding:0 var(--side)}
+.pad button{flex:1 1 0;min-width:0;padding:0;overflow:hidden}
+.memoRow button{height:54px;display:grid;font-size:clamp(9px,2.9vw,13px);line-height:1;color:var(--muted);padding:3px 2px;background:var(--memoBtn);border-color:var(--btn)}
+.memoRow button span{display:flex;align-items:center;justify-content:center}
+.memoRow button span.me{color:var(--fg);font-weight:900;font-size:1.3em}
+.numRow{padding-top:8px;padding-bottom:14px}
+.numRow button{height:66px;font-size:38px;font-weight:800;background:var(--num);color:var(--numTx);border-color:var(--num)}
+/* pressed feedback */
+.pad button,.tools button{transition:background .08s,transform .08s}
+.numRow button.press{background:var(--numPress);border-color:var(--numPress);color:var(--pressTx);transform:scale(.92)}
+.memoRow button.press{background:var(--memoPress);border-color:var(--memoPress);transform:scale(.92)}
+.memoRow button.press span{color:var(--pressTx)}
+.tools button.press{background:var(--btn);transform:scale(.94)}
+button:active{transform:scale(.95)}
+/* cell feedback */
+.cell.put{animation:put .45s ease-out}
+@keyframes put{0%{background:var(--put);transform:scale(.82)}55%{transform:scale(1.08)}100%{transform:scale(1)}}
+.cell.mput{animation:mput .4s ease-out}
+@keyframes mput{0%{background:var(--mput)}100%{}}
+.cell.del{animation:del .45s ease-out}
+@keyframes del{0%{background:var(--del)}100%{}}
+.ghost{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--err);pointer-events:none;animation:ghost .45s ease-out forwards}
+@keyframes ghost{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
+.pad button.full{opacity:.28}
+
+/* ---------- overlays ---------- */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.ov.on{display:flex}
+.sheet{background:var(--panel);color:var(--fg);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto;border-top:2px solid var(--btn)}
+.sheet h2{margin:0 0 12px;font-size:22px;text-align:center}
+.row{display:flex;align-items:center;justify-content:space-between;padding:12px 2px;border-bottom:1px solid rgba(128,128,128,.25);font-size:18px;gap:10px}
+.seg{display:flex;gap:6px}
+.seg button{padding:8px 10px;font-size:15px;border-color:var(--muted);color:var(--muted)}
+.seg button.on{border-color:var(--accent);color:var(--accent)}
+.slotRow{display:flex;gap:14px;align-items:stretch;margin-bottom:10px}
+.slot{flex:1;display:flex;align-items:center;gap:14px;padding:10px 12px;text-align:left;min-height:84px}
+.slot .tx{flex:1}
+.slot .tx b{display:block;font-size:20px}
+.slot .tx small{display:block;font-size:15px;color:var(--muted);margin-top:4px}
+.thumb{flex:none;width:60px;height:60px;display:grid;gap:1px;background:var(--line);border:2px solid var(--frame)}
+.thumb i{background:var(--cell)}
+.thumb i.g{background:var(--given);opacity:.75}
+.thumb i.u{background:var(--user)}
+.slotDel{flex:none;width:52px;padding:0;display:flex;align-items:center;justify-content:center;color:var(--err);border-color:var(--btn)}
+.slotDel svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.closeBtn{width:100%;height:56px;font-size:20px;font-weight:700;margin-top:14px}
+.ver{color:var(--muted);font-size:14px;text-align:center;margin-top:10px}
+.notes{font-size:15px;color:var(--muted);line-height:1.6;margin:6px 0 0;padding-left:20px}
+.danger{border-color:var(--err);color:var(--err);font-size:15px;padding:8px 12px}
+
+/* help */
+.ex{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid rgba(128,128,128,.25)}
+.mini{position:relative;display:flex;background:var(--line);border:2px solid var(--line);gap:2px;flex:none}
+.mini div{width:44px;height:44px;background:var(--cell);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600}
+.mini i{position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:2px solid var(--fg);background:#fff}
+.mini i.b{background:#000}
+.ex p{margin:0;font-size:19px;line-height:1.4}
+.ex p small{display:block;font-size:14px;color:var(--muted)}
+.ok{color:var(--good);font-weight:900}
+.ng{color:var(--err);font-weight:900}
+
+/* clear */
+#clearOv{align-items:center;background:rgba(0,0,0,.55)}
+.clearBox{background:var(--panel);border:3px solid var(--accent);border-radius:22px;width:min(92vw,420px);padding:24px 18px 18px;text-align:center;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.clearBox h2{margin:0;font-size:46px;letter-spacing:6px;color:var(--accent);font-weight:900}
+.clearBox .info{font-size:20px;margin:12px 0 4px}
+.clearBox .info b{font-size:30px;font-variant-numeric:tabular-nums}
+.clearBox .rec{color:var(--good);font-weight:800;font-size:18px;min-height:24px}
+.clearBox .btns{display:flex;gap:10px;margin-top:16px}
+.clearBox .btns button{height:64px;font-size:24px;font-weight:800}
+.clearBox .btns .home{flex:0 0 76px}
+.clearBox .btns .next{flex:1;border-color:var(--num);background:var(--num);color:var(--numTx)}
+.toast{position:fixed;left:50%;bottom:44%;transform:translateX(-50%);background:var(--panel);border:2px solid var(--btn);padding:10px 18px;border-radius:14px;font-size:18px;z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1}
+</style>
+</head>
+<body class="light">
+
+<!-- HOME -->
+<div id="home" class="screen on">
+  <div class="homeTop">
+    <button class="icoBtn" id="hHelp" aria-label="遊び方">?</button>
+    <button class="icoBtn" id="hSet" aria-label="設定">⚙</button>
+  </div>
+  <div class="logo">
+    <h1>KROPKI</h1>
+    <div class="dots"><i></i><i class="b"></i><i></i><i class="b"></i></div>
+    <div id="homeStat" style="margin-top:22px;font-size:18px;color:var(--muted)"></div>
+  </div>
+  <div class="homeBody">
+    <button class="cont" id="contBtn"></button>
+    <div class="diffs" id="diffs"></div>
+    <div class="sizes" id="sizes"></div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game" class="screen">
+  <div class="bar">
+    <button class="icoBtn" id="gBack" aria-label="戻る">◀</button>
+    <div class="title"><span id="gTitle"></span><span class="tm" id="gTime"></span></div>
+    <button class="icoBtn" id="gHelp" aria-label="遊び方">?</button>
+  </div>
+  <div id="boardWrap"><div id="board"></div></div>
+  <div class="dock">
+  <div class="msg" id="msg"></div>
+  <div class="tools">
+    <button id="tReset"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 3.5v4.2h4.2"/></svg><small>リセット</small></button>
+    <button id="tHint"><svg viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.2h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg><small>ヒント</small></button>
+    <button id="tErase"><svg viewBox="0 0 24 24"><path d="M4 15.2l9.2-9.2a2 2 0 0 1 2.8 0l3 3a2 2 0 0 1 0 2.8L12 19H7.8z"/><path d="M8.6 10.6l5.8 5.8"/><path d="M12 19h8"/></svg><small>消す</small></button>
+    <button id="tUndo"><svg viewBox="0 0 24 24"><path d="M8.5 5L4 9.5 8.5 14"/><path d="M4 9.5h10.5a5 5 0 0 1 0 10H11"/></svg><small>戻す</small></button>
+  </div>
+  </div>
+  <div class="pad memoRow" id="memoRow"></div>
+  <div class="pad numRow" id="numRow"></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="ov" id="setOv"><div class="sheet">
+  <h2>⚙ 設定</h2>
+  <div class="row">画面<div class="seg" data-k="theme"><button data-v="light">明るい</button><button data-v="dark">暗い</button></div></div>
+  <div class="row">点の意味<div class="seg" data-k="dotRev"><button data-v="1">黒＝差1</button><button data-v="0">黒＝2倍</button></div></div>
+  <div class="row">ミス表示<div class="seg" data-k="err"><button data-v="0">なし</button><button data-v="1">ルール</button><button data-v="2">答え</button></div></div>
+  <div class="row">同じ数字を強調<div class="seg" data-k="same"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
+  <div class="row">メモ自動消去<div class="seg" data-k="autoMemo"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
+  <div class="row">数字の大きさ<div class="seg" data-k="big"><button data-v="0">大</button><button data-v="1">特大</button></div></div>
+  <div class="row">タイマー<div class="seg" data-k="timer"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
+  <div class="row">記録<span id="statLine" style="font-size:15px;color:var(--muted)"></span></div>
+  <div class="row">更新内容<span></span></div>
+  <ul class="notes" id="notes"></ul>
+  <div class="row" style="border:none">データ初期化<button class="danger" id="resetBtn">リセット</button></div>
+  <div class="ver" id="ver"></div>
+  <button class="closeBtn" data-close>閉じる</button>
+</div></div>
+
+<!-- HELP -->
+<div class="ov" id="helpOv"><div class="sheet">
+  <h2>遊び方</h2>
+  <button class="closeBtn" id="tutBtn" style="margin:0 0 6px;background:var(--num);border-color:var(--num);color:var(--numTx)">▶ チュートリアルで体験する</button>
+  <div class="ex"><div class="mini"><div>3</div><div>1</div><div>2</div></div><p>行と列に同じ数字は1回だけ</p></div>
+  <div class="ex"><div class="mini"><div>3</div><div>4</div><i id="hd1"></i></div><p><span id="hn1"></span> ＝ 差が1<small>3と4、5と6 など</small></p></div>
+  <div class="ex"><div class="mini"><div>3</div><div>6</div><i id="hd2"></i></div><p><span id="hn2"></span> ＝ 2倍<small>2と4、3と6 など</small></p></div>
+  <div class="ex"><div class="mini"><div>2</div><div>5</div></div><p>点なし ＝ 差1でも2倍でもない<small>点は全部表示されている</small></p></div>
+  <div class="ex"><div class="mini"><div>1</div><div>2</div><i></i></div><p>1と2は 白丸でも黒丸でもOK</p></div>
+  <div class="ex" style="border:none"><p style="font-size:17px">上の段 ＝ メモ ／ 下の段 ＝ 数字<small>同じ数字をもう一度押すと消えます</small></p></div>
+  <button class="closeBtn" data-close>OK</button>
+</div></div>
+
+<!-- CONTINUE CHOOSER -->
+<div class="ov" id="contOv"><div class="sheet">
+  <h2>どれを続けますか？</h2>
+  <div id="contList"></div>
+  <button class="closeBtn" data-close>閉じる</button>
+</div></div>
+
+<!-- CONFIRM -->
+<div class="ov" id="cfOv" style="align-items:center"><div class="sheet" style="border-radius:20px;width:min(92vw,400px);border:2px solid var(--btn)">
+  <h2 id="cfMsg"></h2>
+  <div style="display:flex;gap:10px"><button class="closeBtn" data-close style="flex:1">やめる</button><button class="closeBtn" id="cfYes" style="flex:1;border-color:var(--err);color:var(--err)">OK</button></div>
+</div></div>
+
+<!-- CLEAR -->
+<div class="ov" id="clearOv"><div class="clearBox">
+  <h2>CLEAR</h2>
+  <div class="info">⏱ <b id="cTime"></b></div>
+  <div class="info" id="cSub" style="font-size:16px;color:var(--muted)"></div>
+  <div class="rec" id="cRec"></div>
+  <div class="btns"><button class="home" id="cHome">🏠</button><button class="next" id="cNext">次へ ▶</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== Kropki core: generator & solver (shared by main thread and worker) ===== */
+var KCORE = (function () {
+  var PC = new Uint8Array(1024);
+  for (var i = 1; i < 1024; i++) PC[i] = PC[i >> 1] + (i & 1);
+  function bitVal(m) { return 32 - Math.clz32(m & -m); } // lowest bit -> value (1-based)
+
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hashSeed(s) {
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+    return h >>> 0;
+  }
+  function shuffle(a, r) {
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  // dots: {h:[n*(n-1)] (r,c)-(r,c+1) at r*(n-1)+c, v:[(n-1)*n] (r,c)-(r+1,c) at r*n+c}; 0 none,1 white,2 black
+  function compatMask(n, t, v) {
+    var m = 0;
+    for (var w = 1; w <= n; w++) {
+      if (w === v) continue;
+      var diff1 = Math.abs(w - v) === 1, dbl = (w === 2 * v || v === 2 * w);
+      var ok = t === 1 ? diff1 : t === 2 ? dbl : !(diff1 || dbl);
+      if (ok) m |= 1 << (w - 1);
+    }
+    return m;
+  }
+  function makeCtx(n, dots) {
+    var N = n * n, full = (1 << n) - 1;
+    var ea = [], eb = [], et = [];
+    if (dots) {
+      for (var r = 0; r < n; r++) for (var c = 0; c < n - 1; c++) { ea.push(r * n + c); eb.push(r * n + c + 1); et.push(dots.h[r * (n - 1) + c]); }
+      for (var r2 = 0; r2 < n - 1; r2++) for (var c2 = 0; c2 < n; c2++) { ea.push(r2 * n + c2); eb.push((r2 + 1) * n + c2); et.push(dots.v[r2 * n + c2]); }
+    }
+    var cmp = [[], [], []], orTab = new Int32Array(3 * 1024), stat = new Int32Array(3);
+    for (var t = 0; t < 3; t++) {
+      stat[t] = 0;
+      for (var v = 1; v <= n; v++) { cmp[t][v] = compatMask(n, t, v); if (cmp[t][v]) stat[t] |= 1 << (v - 1); }
+      for (var m = 0; m <= full; m++) {
+        var o = 0;
+        for (var v2 = 1; v2 <= n; v2++) if (m & (1 << (v2 - 1))) o |= cmp[t][v2];
+        orTab[t * 1024 + m] = o;
+      }
+    }
+    var cellStatic = new Int32Array(N);
+    for (var k = 0; k < N; k++) cellStatic[k] = full;
+    for (var e = 0; e < ea.length; e++) { cellStatic[ea[e]] &= stat[et[e]]; cellStatic[eb[e]] &= stat[et[e]]; }
+    var lines = [];
+    for (var a = 0; a < n; a++) {
+      var row = [], col = [];
+      for (var b = 0; b < n; b++) { row.push(a * n + b); col.push(b * n + a); }
+      lines.push(row, col);
+    }
+    return { n: n, N: N, full: full, ea: ea, eb: eb, et: et, cmp: cmp, orTab: orTab, cellStatic: cellStatic, lines: lines };
+  }
+
+  // level 1: line singles, hidden singles, static dot masks, edges with fixed neighbours
+  // level 2: + full edge arc-consistency, naked pairs/triples
+  function propagate(dom, ctx, level) {
+    var n = ctx.n, full = ctx.full, lines = ctx.lines, ea = ctx.ea, eb = ctx.eb, et = ctx.et, orTab = ctx.orTab, cmp = ctx.cmp;
+    var changed = true;
+    while (changed) {
+      changed = false;
+      for (var li = 0; li < lines.length; li++) {
+        var L = lines[li], fixed = 0, i, c, m;
+        for (i = 0; i < n; i++) { m = dom[L[i]]; if (PC[m] === 1) { if (fixed & m) return false; fixed |= m; } }
+        for (i = 0; i < n; i++) {
+          c = L[i]; m = dom[c];
+          if (PC[m] > 1 && (m & fixed)) { m &= ~fixed; if (!m) return false; dom[c] = m; changed = true; }
+        }
+        // hidden singles
+        for (var b = 1; b <= full; b <<= 1) {
+          var cnt = 0, at = -1;
+          for (i = 0; i < n; i++) if (dom[L[i]] & b) { cnt++; at = L[i]; if (cnt > 1) break; }
+          if (cnt === 0) return false;
+          if (cnt === 1 && dom[at] !== b) { dom[at] = b; changed = true; }
+        }
+        if (level >= 2) {
+          // naked pairs / triples
+          for (i = 0; i < n; i++) {
+            var mi = dom[L[i]], pi = PC[mi];
+            if (pi < 2 || pi > 3) continue;
+            var cnt2 = 0;
+            for (var j = 0; j < n; j++) if ((dom[L[j]] | mi) === mi) cnt2++;
+            if (cnt2 > pi) return false;
+            if (cnt2 === pi) {
+              for (j = 0; j < n; j++) {
+                var mj = dom[L[j]];
+                if ((mj | mi) !== mi && (mj & mi)) { mj &= ~mi; if (!mj) return false; dom[L[j]] = mj; changed = true; }
+              }
+            }
+          }
+        }
+      }
+      for (var e = 0; e < ea.length; e++) {
+        var A = ea[e], B = eb[e], t = et[e], da = dom[A], db = dom[B], nb, na;
+        if (level >= 2) {
+          nb = db & orTab[t * 1024 + da]; na = da & orTab[t * 1024 + db];
+        } else {
+          nb = PC[da] === 1 ? db & cmp[t][bitVal(da)] : db;
+          na = PC[db] === 1 ? da & cmp[t][bitVal(db)] : da;
+        }
+        if (!na || !nb) return false;
+        if (na !== da) { dom[A] = na; changed = true; }
+        if (nb !== db) { dom[B] = nb; changed = true; }
+      }
+    }
+    return true;
+  }
+  function isSolved(dom) { for (var i = 0; i < dom.length; i++) if (PC[dom[i]] !== 1) return false; return true; }
+
+  // returns 1 solved, 0 stuck, -1 contradiction
+  function logicSolve(dom, ctx, level) {
+    if (!propagate(dom, ctx, Math.min(level, 2))) return -1;
+    if (level >= 3) {
+      var progress = true;
+      while (progress && !isSolved(dom)) {
+        progress = false;
+        for (var c = 0; c < dom.length; c++) {
+          var m = dom[c];
+          if (PC[m] < 2) continue;
+          for (var b = 1; b <= m; b <<= 1) {
+            if (!(m & b)) continue;
+            var cp = dom.slice(); cp[c] = b;
+            if (!propagate(cp, ctx, 2)) {
+              dom[c] &= ~b; progress = true;
+              if (!dom[c] || !propagate(dom, ctx, 2)) return -1;
+            }
+          }
+        }
+      }
+    }
+    return isSolved(dom) ? 1 : 0;
+  }
+
+  function countSol(dom, ctx, limit) {
+    if (!propagate(dom, ctx, 2)) return 0;
+    var best = -1, bp = 99;
+    for (var i = 0; i < dom.length; i++) { var p = PC[dom[i]]; if (p > 1 && p < bp) { bp = p; best = i; if (p === 2) break; } }
+    if (best < 0) return 1;
+    var total = 0, m = dom[best];
+    for (var b = 1; b <= m; b <<= 1) {
+      if (!(m & b)) continue;
+      var cp = dom.slice(); cp[best] = b;
+      total += countSol(cp, ctx, limit - total);
+      if (total >= limit) break;
+    }
+    return total;
+  }
+
+  function randomFill(dom, ctx, r) {
+    if (!propagate(dom, ctx, 2)) return null;
+    var best = -1, bp = 99;
+    for (var i = 0; i < dom.length; i++) { var p = PC[dom[i]]; if (p > 1 && p < bp) { bp = p; best = i; } }
+    if (best < 0) return dom;
+    var vals = [], m = dom[best];
+    for (var b = 1; b <= m; b <<= 1) if (m & b) vals.push(b);
+    shuffle(vals, r);
+    for (var k = 0; k < vals.length; k++) {
+      var cp = dom.slice(); cp[best] = vals[k];
+      var res = randomFill(cp, ctx, r);
+      if (res) return res;
+    }
+    return null;
+  }
+
+  function initDom(ctx, sol, givens) {
+    var dom = new Int32Array(ctx.N);
+    for (var i = 0; i < ctx.N; i++) dom[i] = givens && givens[i] ? 1 << (sol[i] - 1) : ctx.cellStatic[i];
+    return dom;
+  }
+  // tier: 1 basic logic, 2 chain logic (arc consistency + subsets), 3 trial (contradiction), 4 uniqueness only
+  function solvable(ctx, sol, givens, tier) {
+    var dom = initDom(ctx, sol, givens);
+    if (tier >= 4) return countSol(dom, ctx, 2) === 1;
+    return logicSolve(dom, ctx, tier) === 1;
+  }
+  // diff: 0 easy, 1 normal, 2 hard, 3 oni
+  var TIER = [1, 1, 2, 3];
+  function generate(n, diff, level) {
+    var base = hashSeed(n + ':' + diff + ':' + level + ':kropki-v1');
+    var tier = TIER[diff], best = null;
+    for (var attempt = 0; attempt < 6; attempt++) {
+      var r = rng(base + attempt * 7919);
+      var N = n * n, i, c, rr;
+      var ctx0 = makeCtx(n, null);
+      var d0 = new Int32Array(N); for (i = 0; i < N; i++) d0[i] = ctx0.full;
+      var filled = randomFill(d0, ctx0, r), sol = [];
+      for (i = 0; i < N; i++) sol.push(bitVal(filled[i]));
+      var h = [], v = [];
+      var dotFor = function (a, b) {
+        var d1 = Math.abs(a - b) === 1, db = (a === 2 * b || b === 2 * a);
+        if (d1 && db) return r() < 0.5 ? 1 : 2;
+        return d1 ? 1 : db ? 2 : 0;
+      };
+      for (rr = 0; rr < n; rr++) for (c = 0; c < n - 1; c++) h.push(dotFor(sol[rr * n + c], sol[rr * n + c + 1]));
+      for (rr = 0; rr < n - 1; rr++) for (c = 0; c < n; c++) v.push(dotFor(sol[rr * n + c], sol[(rr + 1) * n + c]));
+      var ctx = makeCtx(n, { h: h, v: v });
+      var givens = []; for (i = 0; i < N; i++) givens.push(1);
+      var order = []; for (i = 0; i < N; i++) order.push(i);
+      shuffle(order, r);
+      for (var k = 0; k < N; k++) {
+        givens[order[k]] = 0;
+        if (!solvable(ctx, sol, givens, tier)) givens[order[k]] = 1;
+      }
+      if (diff === 0) { // easy: put back numbers so about 1/3 of the board is given
+        var target = Math.round(N * (n <= 5 ? 0.3 : 0.36)), cnt = 0;
+        for (i = 0; i < N; i++) cnt += givens[i];
+        for (k = 0; k < N && cnt < target; k++) if (!givens[order[k]]) { givens[order[k]] = 1; cnt++; }
+      } else if (diff === 1) { // normal: a few extra numbers on big boards
+        var extra = Math.max(0, n - 5), added = 0;
+        for (k = 0; k < N && added < extra; k++) if (!givens[order[k]]) { givens[order[k]] = 1; added++; }
+      }
+      var p = { n: n, diff: diff, level: level, sol: sol, givens: givens, h: h, v: v };
+      if (diff < 2 || !solvable(ctx, sol, givens, tier - 1)) return p;
+      if (!best) best = p;
+    }
+    return best;
+  }
+
+  return { PC: PC, bitVal: bitVal, makeCtx: makeCtx, propagate: propagate, logicSolve: logicSolve, countSol: countSol, generate: generate, initDom: initDom, solvable: solvable };
+})();
+if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof importScripts === 'function') {
+  self.onmessage = function (e) {
+    var d = e.data;
+    var p = KCORE.generate(d.n, d.diff, d.level);
+    self.postMessage({ id: d.id, puzzle: p });
+  };
+}
+if (typeof module !== 'undefined') module.exports = KCORE;
+
+</script>
+<script>
+(function(){
+var VERSION = '0.4.0';
+var NOTES = ['0.4.0 途中のゲームを3つまで保存。「つづき」から選んで再開、不要なものは消せる','0.3.4 プレイ中に「？」から始めたチュートリアルは、終わると元のゲームに戻るように','0.3.3 盤面を左右と下の余白いっぱいまで拡大（枠は細いまま）。案内欄はボタンの上に重ねて表示','0.3.2 案内欄の×ボタンを廃止（チュートリアルは左上の◀でやめる、ヒントは最後に「閉じる」）','0.3.1 盤面を画面幅いっぱいに。左右の端を上のボタン・下のボタンとそろえた','0.3.0 ヒントを「場所→理由→数字」の3段階に（自動では入れない）。チュートリアル追加。消しゴムアイコン、全メモ廃止、ボタン順を変更','0.2.4 リセットボタンを追加（盤面を最初の状態に戻す・戻すボタンで取り消し可）','0.2.3 黒丸＝差1、白丸＝2倍に入れ替え（設定「点の意味」で元に戻せます）','0.2.2 メモの数字を縦横そろった3×3の並びに（点にも重ならない位置）','0.2.1 色を落ち着いたトーンに変更（目にやさしい紙色が標準、暗い画面は真っ黒をやめてチャコール）','0.2.0 カラーデザインに変更。ボタンを押している間は色が変わり、数字を入れた・消したマスが光るように','0.1.4 メモボタンと数字ボタンの幅・位置をそろえた','0.1.3 メモの数字が点に隠れないよう配置を変更、点を少し小さく','0.1.2 数字を大きく太く・見やすい色に。設定に「数字の大きさ（大／特大）」を追加','0.1.1 黒丸・白丸の色を見た目どおりに修正（黒丸＝中が黒、白丸＝中が白）','0.1.0 はじめての版：4×4〜9×9、4段階の難しさ、レベル無限、メモ、ヒント、自動セーブ'];
+var DIFF = ['やさしい','ふつう','むずかしい','鬼'];
+var DSTAR = ['★','★★','★★★','👹'];
+var PC = KCORE.PC;
+// memo digit positions (% of cell). Dots sit on the middle of each edge, so the edge-middle digits are pulled toward the centre.
+var MPOS = (function(){
+  // aligned 3x3 grid, kept away from the cell edges so the dots (edge middles) never cover a digit
+  var g3 = [24, 50, 76], g2 = [30, 70], t3 = [], t2 = [];
+  for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) t3.push([g3[c], g3[r]]);
+  for (r = 0; r < 2; r++) for (c = 0; c < 2; c++) t2.push([g2[c], g2[r]]);
+  return [t2, t3];
+})();
+var $ = function(id){ return document.getElementById(id); };
+var KEY = 'kropki-save-v1';
+
+/* ---------- save data ---------- */
+var S = null;
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
+if (!S || typeof S !== 'object') S = {};
+S.set = Object.assign({theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1}, S.set || {});
+S.prog = S.prog || {};
+if (!S.set.calm) { S.set.calm = 1; S.set.theme = 'light'; }
+S.games = S.games || {};
+var MAX_SLOTS = 3;
+function playing(){ // unfinished games, most recently played first
+  return Object.keys(S.games).filter(function(k){ return S.games[k] && !S.games[k].done; })
+    .sort(function(a, b){ return (S.games[b].last || (b === S.last ? 1 : 0)) - (S.games[a].last || (a === S.last ? 1 : 0)); });
+}
+(function(){ var pl = playing(); for (var i = MAX_SLOTS; i < pl.length; i++) delete S.games[pl[i]]; })();
+var saveT = null;
+function save(now){
+  clearTimeout(saveT);
+  var f = function(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
+  if (now) f(); else saveT = setTimeout(f, 300);
+}
+function key(n,d){ return n + '-' + d; }
+function prog(n,d){ var k = key(n,d); if (!S.prog[k]) S.prog[k] = {c:0, best:0, cnt:0}; return S.prog[k]; }
+function fmt(t){ t = Math.floor(t); var h = Math.floor(t/3600), m = Math.floor(t/60)%60, s = t%60; return (h ? h + ':' + (m<10?'0':'') : '') + m + ':' + (s<10?'0':'') + s; }
+
+/* ---------- toast / overlays ---------- */
+var toastT;
+function toast(msg){ var t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function(){ t.classList.remove('on'); }, 1400); }
+function openOv(id){ $('toast').classList.remove('on'); $(id).classList.add('on'); }
+function closeOv(id){ $(id).classList.remove('on'); }
+Array.prototype.forEach.call(document.querySelectorAll('.ov'), function(ov){
+  ov.addEventListener('click', function(e){ if (e.target === ov && ov.id !== 'clearOv') closeOv(ov.id); });
+  Array.prototype.forEach.call(ov.querySelectorAll('[data-close]'), function(b){ b.onclick = function(){ closeOv(ov.id); }; });
+});
+var cfCb = null;
+function confirmBox(msg, cb){ $('cfMsg').textContent = msg; cfCb = cb; openOv('cfOv'); }
+$('cfYes').onclick = function(){ closeOv('cfOv'); if (cfCb) cfCb(); };
+
+/* ---------- dot colours (which colour means which rule) ---------- */
+function dotCls(t){ return ((t === 2) !== !!S.set.dotRev) ? 'b' : 'w'; }
+function updateHelp(){
+  $('hd1').className = dotCls(1); $('hd2').className = dotCls(2);
+  $('hn1').textContent = dotCls(1) === 'b' ? '黒丸' : '白丸';
+  $('hn2').textContent = dotCls(2) === 'b' ? '黒丸' : '白丸';
+}
+/* ---------- theme / settings ---------- */
+function applyTheme(){
+  document.body.classList.toggle('light', S.set.theme === 'light');
+  var m = document.querySelector('meta[name=theme-color]'); if (m) m.content = S.set.theme === 'light' ? '#e8e5de' : '#25282d';
+}
+function renderSettings(){
+  Array.prototype.forEach.call(document.querySelectorAll('#setOv .seg'), function(seg){
+    var k = seg.dataset.k;
+    Array.prototype.forEach.call(seg.children, function(b){
+      b.classList.toggle('on', String(S.set[k]) === b.dataset.v);
+      b.onclick = function(){
+        var v = b.dataset.v; S.set[k] = (k === 'theme') ? v : Number(v);
+        save(); applyTheme(); renderSettings(); updateHelp(); if (G) { if (k === 'dotRev') buildBoard(); layout(); render(); } updateTime();
+      };
+    });
+  });
+  var tot = 0; for (var k in S.prog) tot += S.prog[k].cnt || 0;
+  $('statLine').textContent = 'クリア ' + tot + ' 回';
+  $('notes').innerHTML = NOTES.map(function(n){ return '<li>' + n + '</li>'; }).join('');
+  $('ver').textContent = 'KROPKI v' + VERSION;
+}
+$('hSet').onclick = function(){ renderSettings(); openOv('setOv'); };
+function openHelp(){ S.set.helped = 1; save(); openOv('helpOv'); }
+$('hHelp').onclick = $('gHelp').onclick = openHelp;
+$('resetBtn').onclick = function(){
+  confirmBox('全部の記録を消しますか？', function(){
+    S.prog = {}; S.games = {}; S.last = null; save(true); closeOv('setOv'); renderHome();
+  });
+};
+
+/* ---------- home ---------- */
+function renderHome(){
+  var d = S.set.diff, tot = 0;
+  for (var pk in S.prog) tot += S.prog[pk].cnt || 0;
+  $('homeStat').textContent = tot ? '🏆 ' + tot : '';
+  $('diffs').innerHTML = '';
+  DIFF.forEach(function(name, i){
+    var b = document.createElement('button');
+    b.innerHTML = name + '<span>' + DSTAR[i] + '</span>';
+    if (i === d) b.className = 'on';
+    b.onclick = function(){ S.set.diff = i; save(); renderHome(); };
+    $('diffs').appendChild(b);
+  });
+  $('sizes').innerHTML = '';
+  for (var n = 4; n <= 9; n++) (function(n){
+    var p = prog(n, d), g = S.games[key(n,d)], b = document.createElement('button');
+    var playing = g && !g.done;
+    b.innerHTML = '<b>' + n + '×' + n + '</b><small class="' + (playing ? 'go' : '') + '">' + (playing ? '▶ ' : '') + 'Lv.' + (playing ? g.level : p.c + 1) + '</small>';
+    b.onclick = function(){ startGame(n, d); };
+    $('sizes').appendChild(b);
+  })(n);
+  var pl = playing(), cb = $('contBtn');
+  if (pl.length === 1) {
+    var one = S.games[pl[0]];
+    cb.style.display = '';
+    cb.innerHTML = '▶ つづき <small>' + one.n + '×' + one.n + ' ' + DIFF[one.diff] + ' Lv.' + one.level + '</small>';
+    cb.onclick = function(){ startGame(one.n, one.diff); };
+  } else if (pl.length > 1) {
+    cb.style.display = '';
+    cb.innerHTML = '▶ つづき <small>' + pl.length + 'つから選ぶ</small>';
+    cb.onclick = openChooser;
+  } else cb.style.display = 'none';
+}
+var TRASH = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
+function openChooser(){
+  var pl = playing(), list = $('contList');
+  if (!pl.length) { closeOv('contOv'); renderHome(); return; }
+  list.innerHTML = '';
+  pl.forEach(function(k){
+    var g = S.games[k], filled = 0, user = 0, th = '';
+    for (var i = 0; i < g.n*g.n; i++) {
+      var c = g.p.givens[i] ? 'g' : (g.vals[i] ? 'u' : '');
+      if (g.vals[i]) filled++;
+      th += '<i class="' + c + '"></i>';
+    }
+    var row = document.createElement('div'); row.className = 'slotRow';
+    var b = document.createElement('button'); b.className = 'slot';
+    b.innerHTML = '<div class="thumb" style="grid-template-columns:repeat(' + g.n + ',1fr)">' + th + '</div>' +
+      '<div class="tx"><b>' + g.n + '×' + g.n + ' ' + DIFF[g.diff] + ' Lv.' + g.level + '</b><small>⏱ ' + fmt(g.time) + '　' + Math.round(filled * 100 / (g.n*g.n)) + '%</small></div>';
+    b.onclick = function(){ closeOv('contOv'); startGame(g.n, g.diff); };
+    var del = document.createElement('button'); del.className = 'slotDel'; del.innerHTML = TRASH; del.setAttribute('aria-label', '消す');
+    del.onclick = function(){
+      closeOv('contOv');
+      confirmBox(g.n + '×' + g.n + ' ' + DIFF[g.diff] + ' Lv.' + g.level + ' の途中経過を消しますか？', function(){
+        delete S.games[k]; save(true); renderHome(); if (playing().length) openChooser();
+      });
+    };
+    row.appendChild(b); row.appendChild(del); list.appendChild(row);
+  });
+  openOv('contOv');
+}
+function show(id){
+  ['home','game'].forEach(function(s){ $(s).classList.toggle('on', s === id); });
+}
+
+/* ---------- game state ---------- */
+var G = null, ctx = null, adj = null, N = 0, n = 0;
+function newGameState(nn, d, level){
+  var p = KCORE.generate(nn, d, level), vals = [], memo = [];
+  for (var i = 0; i < nn*nn; i++) { vals.push(p.givens[i] ? p.sol[i] : 0); memo.push(0); }
+  return { n:nn, diff:d, level:level, p:p, vals:vals, memo:memo, time:0, hints:0, undo:[], sel:-1, done:false };
+}
+function startGame(nn, d, forceLevel){
+  TUT = null;
+  var k = key(nn, d), g = S.games[k];
+  if (forceLevel || !g || g.done) {
+    var pl = playing().filter(function(x){ return x !== k; });
+    if (pl.length >= MAX_SLOTS) {
+      var old = pl[pl.length-1], og = S.games[old];
+      confirmBox('途中のゲームは3つまで。いちばん古い「' + og.n + '×' + og.n + ' ' + DIFF[og.diff] + ' Lv.' + og.level + '」を消して始めますか？', function(){
+        delete S.games[old]; save(); startGame(nn, d, forceLevel);
+      });
+      return;
+    }
+    var lv = forceLevel || prog(nn, d).c + 1;
+    g = S.games[k] = newGameState(nn, d, lv);
+  }
+  g.last = Date.now();
+  S.last = k; save();
+  show('game');
+  loadGame(g);
+  requestAnimationFrame(layout);
+}
+function loadGame(g){
+  G = g; n = g.n; N = n*n; HINT = null; clearMark(); clearMsg();
+  ctx = KCORE.makeCtx(n, {h:g.p.h, v:g.p.v});
+  adj = []; for (var i = 0; i < N; i++) adj.push([]);
+  for (var e = 0; e < ctx.ea.length; e++) {
+    adj[ctx.ea[e]].push({j:ctx.eb[e], t:ctx.et[e], e:e});
+    adj[ctx.eb[e]].push({j:ctx.ea[e], t:ctx.et[e], e:e});
+  }
+  $('gTitle').textContent = n + '×' + n + ' ' + DSTAR[g.diff] + ' Lv.' + g.level;
+  buildBoard(); buildPad(); layout(); render(); updateTime();
+}
+
+/* ---------- board DOM ---------- */
+var cellEls = [], dotEls = [];
+function buildBoard(){
+  var b = $('board'); b.innerHTML = ''; cellEls = []; dotEls = [];
+  var cols = n <= 4 ? 2 : 3;
+  for (var i = 0; i < N; i++) {
+    var c = document.createElement('div'); c.className = 'cell';
+    c.dataset.i = i;
+    b.appendChild(c); cellEls.push(c);
+  }
+  for (var e = 0; e < ctx.ea.length; e++) {
+    var t = ctx.et[e];
+    if (!t) { dotEls.push(null); continue; }
+    var d = document.createElement('div'); d.className = 'dot ' + dotCls(t);
+    b.appendChild(d); dotEls.push(d);
+  }
+  b.dataset.cols = cols;
+}
+function layout(){
+  if (!G) return;
+  // board edge lines up exactly with the header and buttons (same side margin)
+  var w = $('boardWrap'), cs0 = getComputedStyle(w);
+  var W = w.clientWidth - parseFloat(cs0.paddingLeft) - parseFloat(cs0.paddingRight);
+  var H = w.clientHeight - parseFloat(cs0.paddingTop) - parseFloat(cs0.paddingBottom);
+  var S0 = Math.floor(Math.max(120, Math.min(W, H)));
+  var g = 2, unit = (S0 - 6 + g) / n, P = [];
+  for (var k = 0; k <= n; k++) P.push(Math.round(k * unit));
+  var cs = unit - g;
+  var b = $('board'); b.style.width = S0 + 'px'; b.style.height = S0 + 'px'; b.style.borderWidth = '3px';
+  b.style.setProperty('--cs', cs + 'px');
+  b.style.setProperty('--fz', S.set.big ? .92 : .74);
+  b.style.setProperty('--mz', S.set.big ? .29 : .26);
+  function lo(c){ return P[c]; } function sz(c){ return P[c+1] - g - P[c]; }
+  for (var i = 0; i < N; i++) {
+    var r = Math.floor(i/n), c = i%n, el = cellEls[i];
+    el.style.left = lo(c) + 'px'; el.style.top = lo(r) + 'px';
+    el.style.width = sz(c) + 'px'; el.style.height = sz(r) + 'px';
+  }
+  var ds = Math.max(9, Math.round(cs*0.2));
+  for (var e = 0; e < dotEls.length; e++) {
+    var d = dotEls[e]; if (!d) continue;
+    var A = ctx.ea[e], B = ctx.eb[e], ra = Math.floor(A/n), ca = A%n, x, y;
+    if (B === A + 1) { x = P[ca+1] - g/2; y = lo(ra) + sz(ra)/2; }
+    else { x = lo(ca) + sz(ca)/2; y = P[ra+1] - g/2; }
+    d.style.width = d.style.height = ds + 'px';
+    d.style.left = (x - ds/2) + 'px'; d.style.top = (y - ds/2) + 'px';
+    d.style.borderWidth = Math.max(2, Math.round(ds/6)) + 'px';
+  }
+}
+window.addEventListener('resize', function(){ layout(); });
+try { new ResizeObserver(function(){ layout(); }).observe($('boardWrap')); } catch(e) {}
+
+function buildPad(){
+  var mr = $('memoRow'), nr = $('numRow'); mr.innerHTML = ''; nr.innerHTML = '';
+  var cols = n <= 4 ? 2 : 3;
+  for (var v = 1; v <= n; v++) (function(v){
+    var m = document.createElement('button');
+    m.style.gridTemplateColumns = 'repeat(' + cols + ',1fr)';
+    var h = '';
+    for (var k = 1; k <= n; k++) h += '<span class="' + (k === v ? 'me' : '') + '">' + k + '</span>';
+    m.innerHTML = h;
+    m.onclick = function(){ toggleMemo(v); };
+    mr.appendChild(m);
+    var b = document.createElement('button'); b.textContent = v;
+    b.onclick = function(){ setValue(v); };
+    nr.appendChild(b);
+  })(v);
+}
+
+/* ---------- logic helpers ---------- */
+function rowcol(i){ var r = Math.floor(i/n), c = i%n, a = []; for (var k = 0; k < n; k++) { if (k !== c) a.push(r*n+k); if (k !== r) a.push(k*n+c); } return a; }
+function basicCand(i){
+  var m = ctx.cellStatic[i], pr = rowcol(i);
+  for (var k = 0; k < pr.length; k++) if (G.vals[pr[k]]) m &= ~(1 << (G.vals[pr[k]]-1));
+  for (var a = 0; a < adj[i].length; a++) { var w = G.vals[adj[i][a].j]; if (w) m &= ctx.cmp[adj[i][a].t][w]; }
+  return m;
+}
+function computeErrors(){
+  var cellErr = new Array(N).fill(false), dotErr = new Array(dotEls.length).fill(false);
+  if (S.set.err === 2) {
+    for (var i = 0; i < N; i++) if (G.vals[i] && G.vals[i] !== G.p.sol[i]) cellErr[i] = true;
+  } else if (S.set.err === 1) {
+    for (var li = 0; li < ctx.lines.length; li++) {
+      var L = ctx.lines[li], seen = {};
+      for (var k = 0; k < n; k++) { var v = G.vals[L[k]]; if (!v) continue; if (seen[v] !== undefined) { cellErr[L[k]] = true; cellErr[seen[v]] = true; } else seen[v] = L[k]; }
+    }
+    for (var e = 0; e < ctx.ea.length; e++) {
+      var a = G.vals[ctx.ea[e]], b = G.vals[ctx.eb[e]];
+      if (a && b && !(ctx.cmp[ctx.et[e]][a] & (1 << (b-1)))) {
+        if (dotEls[e]) dotErr[e] = true; else { cellErr[ctx.ea[e]] = true; cellErr[ctx.eb[e]] = true; }
+      }
+    }
+  }
+  return {c:cellErr, d:dotErr};
+}
+
+/* ---------- render ---------- */
+function render(){
+  if (!G) return;
+  var sel = G.sel, sv = sel >= 0 ? G.vals[sel] : 0, sr = Math.floor(sel/n), sc = sel%n;
+  var er = computeErrors(), cols = n <= 4 ? 2 : 3;
+  for (var i = 0; i < N; i++) {
+    var el = cellEls[i], r = Math.floor(i/n), c = i%n, v = G.vals[i];
+    var cls = 'cell';
+    if (G.p.givens[i]) cls += ' g';
+    if (sel >= 0 && (r === sr || c === sc)) cls += ' hl';
+    if (S.set.same && sv && v === sv) cls += ' same';
+    if (i === sel) cls += ' sel';
+    if (er.c[i]) cls += ' err';
+    if (MARK.rel[i]) cls += ' rel';
+    if (i === MARK.tgt) cls += ' tgt';
+    if (el._keep) cls += ' ' + el._keep;
+    if (el._anim) cls += ' ' + el._anim;
+    el.className = cls;
+    var html;
+    if (v) html = String(v);
+    else if (G.memo[i]) {
+      html = '<div class="memo">';
+      for (var k = 1; k <= n; k++) {
+        if (!(G.memo[i] & (1 << (k-1)))) continue;
+        var pos = MPOS[n <= 4 ? 0 : 1][k-1];
+        html += '<span style="left:' + pos[0] + '%;top:' + pos[1] + '%"' + (S.set.same && k === sv ? ' class="mm"' : '') + '>' + k + '</span>';
+      }
+      html += '</div>';
+    } else html = '';
+    if (el._h !== html) { el.innerHTML = html; el._h = html; }
+  }
+  for (var e = 0; e < dotEls.length; e++) if (dotEls[e]) { dotEls[e].classList.toggle('err', er.d[e]); dotEls[e].classList.toggle('hd', !!MARK.hd[e]); }
+  // pad: dim numbers that are complete
+  var cnt = new Array(n+1).fill(0);
+  for (i = 0; i < N; i++) if (G.vals[i]) cnt[G.vals[i]]++;
+  var nb = $('numRow').children, mb = $('memoRow').children;
+  for (var v2 = 1; v2 <= n; v2++) { nb[v2-1].classList.toggle('full', cnt[v2] >= n); mb[v2-1].classList.toggle('full', cnt[v2] >= n); }
+  $('tUndo').classList.toggle('dis', !G.undo.length);
+}
+function flashCell(i, cls){
+  var el = cellEls[i]; el._keep = cls; render();
+  setTimeout(function(){ if (el._keep === cls) { el._keep = ''; render(); } }, 1000);
+}
+
+
+/* press feedback: colour stays on while finger is down (and at least 120ms) */
+(function(){
+  var cur = null, t0 = 0;
+  function down(e){ var b = e.target.closest('.pad button, .tools button'); if (!b) return; up(); cur = b; t0 = Date.now(); b.classList.add('press'); }
+  function up(){ if (!cur) return; var b = cur, wait = Math.max(0, 120 - (Date.now() - t0)); cur = null; setTimeout(function(){ b.classList.remove('press'); }, wait); }
+  document.addEventListener('pointerdown', down);
+  ['pointerup','pointercancel','pointerleave'].forEach(function(ev){ document.addEventListener(ev, up); });
+})();
+function animCell(i, cls, ghost){
+  var el = cellEls[i]; if (!el) return;
+  el._anim = ''; render(); void el.offsetWidth;
+  el._anim = cls; render();
+  if (ghost) { var g = document.createElement('span'); g.className = 'ghost'; g.textContent = ghost; el.appendChild(g); }
+  clearTimeout(el._animT);
+  el._animT = setTimeout(function(){ el._anim = ''; var gg = el.querySelector('.ghost'); if (gg) gg.remove(); render(); }, 480);
+}
+/* ---------- input ---------- */
+$('board').addEventListener('pointerdown', function(e){
+  var t = e.target.closest('.cell'); if (!t || !G) return;
+  var i = Number(t.dataset.i);
+  G.sel = i; render();
+  if (TUT) tutShow();
+});
+function pushUndo(changes){ G.undo.push(changes); if (G.undo.length > 300) G.undo.shift(); }
+function snap(i){ return {i:i, v:G.vals[i], m:G.memo[i]}; }
+function editable(){ return G && !G.done && G.sel >= 0 && !G.p.givens[G.sel]; }
+function setValue(v){
+  if (!editable()) { if (G && G.sel < 0) toast('マスを選んでください'); return; }
+  if (tutGuard('v', v)) return;
+  var i = G.sel, ch = [snap(i)], erased = 0;
+  if (G.vals[i] === v) { G.vals[i] = 0; erased = v; }
+  else {
+    G.vals[i] = v; G.memo[i] = 0;
+    if (S.set.autoMemo) {
+      var bit = 1 << (v-1), pr = rowcol(i);
+      for (var k = 0; k < pr.length; k++) if (!G.vals[pr[k]] && (G.memo[pr[k]] & bit)) { ch.push(snap(pr[k])); G.memo[pr[k]] &= ~bit; }
+    }
+  }
+  pushUndo(ch); after();
+  if (!G.done) animCell(i, erased ? 'del' : 'put', erased ? String(erased) : '');
+}
+function toggleMemo(v){
+  if (!editable()) { if (G && G.sel < 0) toast('マスを選んでください'); return; }
+  if (tutGuard('m', v)) return;
+  var i = G.sel; if (G.vals[i]) return;
+  pushUndo([snap(i)]);
+  G.memo[i] ^= 1 << (v-1); after(); animCell(i, 'mput');
+}
+$('tErase').onclick = function(){
+  if (tutBlock()) return;
+  if (!editable()) return;
+  var i = G.sel; if (!G.vals[i] && !G.memo[i]) return;
+  var ov = G.vals[i];
+  pushUndo([snap(i)]); G.vals[i] = 0; G.memo[i] = 0; after(); animCell(i, 'del', ov ? String(ov) : '');
+};
+$('tUndo').onclick = function(){
+  if (tutBlock()) return;
+  if (!G || G.done || !G.undo.length) return;
+  var ch = G.undo.pop();
+  for (var k = ch.length-1; k >= 0; k--) { G.vals[ch[k].i] = ch[k].v; G.memo[ch[k].i] = ch[k].m; }
+  G.sel = ch[0].i; after(true);
+};
+$('tReset').onclick = function(){
+  if (tutBlock()) return;
+  if (!G || G.done) return;
+  var ch = [];
+  for (var i = 0; i < N; i++) if (!G.p.givens[i] && (G.vals[i] || G.memo[i])) ch.push(snap(i));
+  if (!ch.length) { toast('まだ何も入っていません'); return; }
+  confirmBox('盤面を最初の状態に戻しますか？', function(){
+    for (var k = 0; k < ch.length; k++) { G.vals[ch[k].i] = 0; G.memo[ch[k].i] = 0; }
+    pushUndo(ch); G.sel = -1; after();
+    for (k = 0; k < ch.length; k++) animCell(ch[k].i, 'del');
+    toast('⟲ 最初の状態に戻しました（↶で取り消せます）');
+  });
+};
+/* ---------- marks / message bar ---------- */
+var MARK = {tgt:-1, rel:{}, hd:{}};
+function clearMark(){ MARK = {tgt:-1, rel:{}, hd:{}}; }
+function mark(tgt, rel, hd){ clearMark(); MARK.tgt = tgt; (rel||[]).forEach(function(i){ MARK.rel[i] = 1; }); (hd||[]).forEach(function(e){ MARK.hd[e] = 1; }); }
+function showMsg(html, btns){
+  var m = $('msg'); m.className = 'msg on'; m.innerHTML = '<div class="tx">' + html + '</div>';
+  (btns||[]).forEach(function(b){ var el = document.createElement('button'); el.innerHTML = b.t + (b.sub ? '<small>' + b.sub + '</small>' : ''); if (b.c) el.className = b.c; el.onclick = b.f; m.appendChild(el); });
+}
+function clearMsg(){ var m = $('msg'); m.className = 'msg'; m.innerHTML = ''; }
+function edgeOf(a, b){ for (var k = 0; k < adj[a].length; k++) if (adj[a][k].j === b) return adj[a][k].e; return -1; }
+function dn(t){ return dotCls(t) === 'b' ? '黒丸' : '白丸'; }
+
+/* ---------- hint: shows where & why, never fills the answer ---------- */
+var HINT = null;
+function nearest(list){
+  if (G.sel < 0) return list[0];
+  var best = list[0], bd = 1e9;
+  list.forEach(function(c){ var d = Math.abs(Math.floor(c/n) - Math.floor(G.sel/n)) + Math.abs(c%n - G.sel%n); if (d < bd) { bd = d; best = c; } });
+  return best;
+}
+function findHint(){
+  var sol = G.p.sol, i, wrong = [], empt = [];
+  for (i = 0; i < N; i++) { if (G.vals[i] && G.vals[i] !== sol[i]) wrong.push(i); if (!G.vals[i]) empt.push(i); }
+  if (wrong.length) return [
+    {t:'どこかに間違いがあります', tgt:-1},
+    {t:'このマスの数字が違います', tgt:wrong[0]}
+  ];
+  if (!empt.length) return null;
+  var c, v, rel, hd;
+  // 1) only one number fits (row / column / neighbours)
+  var singles = empt.filter(function(i){ return PC[basicCand(i)] === 1; });
+  if (singles.length) {
+    c = nearest(singles); v = sol[c];
+    var nb = adj[c].filter(function(a){ return G.vals[a.j]; });
+    rel = rowcol(c).filter(function(j){ return G.vals[j]; }).concat(nb.map(function(a){ return a.j; }));
+    hd = nb.filter(function(a){ return a.t; }).map(function(a){ return a.e; });
+    return [
+      {t:'光っているマスの数字が決められます', tgt:c},
+      {t:'行・列の数字と、となりとの点（点なしも）で1つに決まります', tgt:c, rel:rel, hd:hd},
+      {t:'入る数字は <b>' + v + '</b>', tgt:c, rel:rel, hd:hd}
+    ];
+  }
+  // 2) a number has only one place in a row / column
+  var hid = [];
+  for (var li = 0; li < ctx.lines.length; li++) {
+    var L = ctx.lines[li];
+    for (v = 1; v <= n; v++) {
+      var at = -1, cnt = 0, placed = false;
+      for (var k = 0; k < n; k++) { var q = L[k]; if (G.vals[q] === v) placed = true; else if (!G.vals[q] && (basicCand(q) & (1 << (v-1)))) { cnt++; at = q; } }
+      if (!placed && cnt === 1) hid.push({c:at, v:v, L:L, row:li % 2 === 0});
+    }
+  }
+  if (hid.length) {
+    c = nearest(hid.map(function(h){ return h.c; }));
+    var h = hid.filter(function(x){ return x.c === c; })[0], ln = h.row ? '行' : '列';
+    return [
+      {t:'光っているマスの数字が決められます', tgt:c},
+      {t:'この' + ln + 'には、ここにしか入れない数字があります', tgt:c, rel:h.L},
+      {t:'その数字は <b>' + h.v + '</b>', tgt:c, rel:h.L}
+    ];
+  }
+  // 3) chains of dots, 4) trial & contradiction
+  var dom = new Int32Array(N);
+  for (i = 0; i < N; i++) dom[i] = G.vals[i] ? 1 << (G.vals[i]-1) : ctx.cellStatic[i];
+  var d2 = dom.slice(); KCORE.propagate(d2, ctx, 2);
+  var cs = empt.filter(function(i){ return PC[d2[i]] === 1; }), deep = false;
+  if (!cs.length) { d2 = dom.slice(); KCORE.logicSolve(d2, ctx, 3); cs = empt.filter(function(i){ return PC[d2[i]] === 1; }); deep = true; }
+  if (!cs.length) { var bp = 99; empt.forEach(function(i){ if (PC[d2[i]] < bp) { bp = PC[d2[i]]; cs = [i]; } }); }
+  c = nearest(cs); v = sol[c];
+  rel = adj[c].map(function(a){ return a.j; });
+  hd = adj[c].filter(function(a){ return a.t; }).map(function(a){ return a.e; });
+  return [
+    {t:'光っているマスの数字が決められます', tgt:c},
+    deep ? {t:'候補を仮に入れて、矛盾する数字を消していくと決まります', tgt:c, rel:rel, hd:hd}
+         : {t:'となりの候補と点の関係を、つなげて考えると決まります', tgt:c, rel:rel, hd:hd},
+    {t:'入る数字は <b>' + v + '</b>', tgt:c, rel:rel, hd:hd}
+  ];
+}
+function hintStage(s){
+  var st = HINT.st;
+  if (s > st.length) { endHint(); return; }
+  HINT.s = s; var x = st[s-1];
+  mark(x.tgt, x.rel, x.hd);
+  if (x.tgt >= 0) G.sel = x.tgt;
+  var btns = [s < st.length ? {t:'もっと', sub:s + '/' + st.length, c:'go', f:function(){ hintStage(s+1); }} : {t:'閉じる', sub:s + '/' + st.length, f:endHint}];
+  showMsg(x.t, btns);
+  render();
+}
+function endHint(){ if (!HINT) return; HINT = null; clearMark(); clearMsg(); render(); }
+$('tHint').onclick = function(){
+  if (!G || G.done) return;
+  if (tutBlock()) return;
+  if (HINT) { hintStage(HINT.s + 1); return; }
+  var st = findHint(); if (!st) return;
+  HINT = {st:st, s:0}; G.hints++; save();
+  hintStage(1);
+};
+
+/* ---------- tutorial (fixed 4x4, guided) ---------- */
+var TUT = null;
+var TUT_P = {n:4, diff:0, level:0, sol:[2,1,4,3,4,3,2,1,1,2,3,4,3,4,1,2], givens:[1,1,1,0,0,0,0,0,1,0,0,0,0,1,0,0], h:[2,0,1,1,1,1,2,1,1,1,0,1], v:[2,0,2,0,0,1,1,0,0,2,0,2]};
+function allEdges(t){ var r = []; for (var e = 0; e < ctx.et.length; e++) if (ctx.et[e] === t) r.push(e); return r; }
+function tutSteps(){
+  var D1 = dn(1), D2 = dn(2);
+  return [
+    {info:'たて・よこの各列に1〜4を1つずつ入れます（やめる時は左上の◀）', rel:[0,1,2,3,7,11,15]},
+    {info:D1 + ' は「差が1」。3と4 のように1ちがい', hd:allEdges(1)},
+    {info:D2 + ' は「2倍」。2と4 のように片方が2倍', hd:allEdges(2)},
+    {info:'点がない所は、差1でも2倍でもない', rel:[13,14]},
+    {cell:3, v:3, why:'この行には 2・1・4。残りは？ 下の段で入れよう', rel:[0,1,2]},
+    {cell:4, v:4, why:'上の2と' + D2 + '（2倍）→ 1か4。列にもう1がある', rel:[0,8], hd:[edgeOf(0,4)]},
+    {cell:5, v:3, why:'左の4と' + D1 + '（差1）→ 3か5。5は使えない', rel:[4], hd:[edgeOf(4,5)]},
+    {cell:6, v:2, why:'左の3と' + D1 + ' → 2か4。行にもう4がある', rel:[4,5], hd:[edgeOf(5,6)]},
+    {cell:7, v:1, why:'この行で残っている数字は？', rel:[4,5,6]},
+    {cell:14, v:1, why:'列に4・2 → 1か3。左の4との間に点なし → 3は×', rel:[2,6,13]},
+    {cell:12, m:3, why:'迷った時は上の段でメモできます。メモの 3 を押そう', rel:[0,4,8]},
+    {cell:12, v:3, why:'メモは数字を入れると消えます。下の段の 3 を入れよう'},
+    {info:'残りは自由に解こう。困ったら 💡ヒント', free:true}
+  ];
+}
+function startTutorial(){
+  closeOv('helpOv');
+  // remember the game we came from (tutorial opened with ? during play)
+  var ret = ($('game').classList.contains('on') && G && !G.tut && !G.done) ? G : (TUT && TUT.ret) || null;
+  var p = TUT_P, vals = [], memo = [];
+  for (var i = 0; i < 16; i++) { vals.push(p.givens[i] ? p.sol[i] : 0); memo.push(0); }
+  var g = {n:4, diff:0, level:0, p:p, vals:vals, memo:memo, time:0, hints:0, undo:[], sel:-1, done:false, tut:true};
+  show('game'); loadGame(g);
+  TUT = {i:0, play:false, steps:tutSteps(), ret:ret};
+  $('gTitle').textContent = 'チュートリアル';
+  requestAnimationFrame(layout); tutShow();
+}
+function exitTut(){
+  var ret = TUT && TUT.ret; TUT = null;
+  if (ret) { show('game'); loadGame(ret); requestAnimationFrame(layout); save(); }
+  else goHome();
+}
+function tutShow(){
+  if (!TUT || TUT.play) return;
+  var st = TUT.steps[TUT.i];
+  if (st.info) {
+    mark(-1, st.rel, st.hd);
+    showMsg(st.info, [{t:st.free ? 'はじめる' : '次へ', c:'go', f:tutNext}]);
+  } else if (G.sel !== st.cell) {
+    mark(st.cell);
+    showMsg('光っているマスをタップして選ぼう');
+  } else {
+    mark(st.cell, st.rel, st.hd);
+    showMsg(st.why);
+  }
+  render();
+}
+function tutNext(){
+  var st = TUT.steps[TUT.i];
+  if (st.free) { TUT.play = true; clearMark(); clearMsg(); render(); return; }
+  TUT.i++; tutShow();
+}
+function tutBlock(){
+  if (!TUT || TUT.play) return false;
+  toast('まずは案内どおりに進めよう'); return true;
+}
+function tutGuard(kind, v){
+  if (!TUT || TUT.play) return false;
+  var st = TUT.steps[TUT.i];
+  if (st.info) { toast('「次へ」を押して進もう'); return true; }
+  if (G.sel !== st.cell) { toast('光っているマスを選ぼう'); return true; }
+  if ((kind === 'v' && st.v === v) || (kind === 'm' && st.m === v)) { setTimeout(tutNext, 500); return false; }
+  if (kind === 'm' && st.v) toast('下の段の数字ボタンで入れよう');
+  else if (kind === 'v' && st.m) toast('上の段（メモ）の ' + st.m + ' を押そう');
+  else { toast('ちがうよ。もう一度考えてみよう'); animCell(G.sel, 'del'); }
+  return true;
+}
+$('tutBtn').onclick = startTutorial;
+
+function after(){
+  if (HINT) endHint();
+  if (!G.tut) G.last = Date.now();
+  render(); save();
+  for (var i = 0; i < N; i++) if (G.vals[i] !== G.p.sol[i]) return;
+  win();
+}
+
+/* ---------- clear ---------- */
+function win(){
+  G.done = true; G.sel = -1;
+  if (G.tut) {
+    clearMark(); clearMsg();
+    for (var t = 0; t < N; t++) { var te = cellEls[t]; te.style.animationDelay = ((Math.floor(t/n) + t%n) * 45) + 'ms'; te._keep = 'wave'; }
+    render();
+    setTimeout(function(){
+      $('cTime').textContent = fmt(G.time); $('cSub').textContent = 'チュートリアル完了！'; $('cRec').textContent = '';
+      $('cNext').textContent = TUT && TUT.ret ? '元のゲームに戻る ▶' : '4×4 やさしいで遊ぶ ▶'; openOv('clearOv');
+    }, 900);
+    return;
+  }
+  $('cNext').textContent = '次へ ▶';
+  var p = prog(n, G.diff), rec = '';
+  p.cnt = (p.cnt || 0) + 1;
+  if (G.level > p.c) p.c = G.level;
+  if (G.hints === 0 && (!p.best || G.time < p.best)) { if (p.best) rec = '🏆 ベスト更新！'; p.best = Math.floor(G.time); }
+  save(true); render();
+  for (var i = 0; i < N; i++) { var el = cellEls[i]; el.style.animationDelay = ((Math.floor(i/n) + i%n) * 45) + 'ms'; el._keep = 'wave'; }
+  render();
+  setTimeout(function(){
+    $('cTime').textContent = fmt(G.time);
+    $('cSub').textContent = n + '×' + n + ' ' + DIFF[G.diff] + ' Lv.' + G.level + (G.hints ? '　💡×' + G.hints : '') + (p.best ? '　ベスト ' + fmt(p.best) : '');
+    $('cRec').textContent = rec;
+    openOv('clearOv');
+  }, 900 + n*90);
+}
+$('cNext').onclick = function(){
+  if (G && G.tut) { closeOv('clearOv'); if (TUT && TUT.ret) { exitTut(); return; } TUT = null; S.set.diff = 0; startGame(4, 0); return; }
+  closeOv('clearOv'); var nn = G.n, d = G.diff;
+  cellEls.forEach(function(el){ el._keep = ''; el.style.animationDelay = ''; });
+  startGame(nn, d, prog(nn, d).c + 1);
+};
+$('cHome').onclick = function(){ closeOv('clearOv'); TUT = null; goHome(); };
+function goHome(){ TUT = null; HINT = null; clearMark(); clearMsg(); save(true); G && cellEls.forEach(function(el){ el._keep = ''; }); renderHome(); show('home'); }
+$('gBack').onclick = function(){ if (TUT) exitTut(); else goHome(); };
+
+/* ---------- timer ---------- */
+function updateTime(){ $('gTime').textContent = (G && S.set.timer) ? '⏱ ' + fmt(G.time) : ''; }
+var lastTick = Date.now();
+setInterval(function(){
+  var now = Date.now(), dt = (now - lastTick) / 1000; lastTick = now;
+  if (G && !G.done && $('game').classList.contains('on') && !document.hidden && !document.querySelector('.ov.on') && dt < 5) {
+    G.time += dt; updateTime(); if (Math.floor(G.time) % 5 === 0) save();
+  }
+}, 1000);
+document.addEventListener('visibilitychange', function(){ lastTick = Date.now(); if (document.hidden) save(true); });
+
+/* ---------- keyboard (PC) ---------- */
+document.addEventListener('keydown', function(e){
+  if (!G || !$('game').classList.contains('on') || document.querySelector('.ov.on')) return;
+  var k = e.key;
+  if (/^[1-9]$/.test(k) && Number(k) <= n) { if (e.altKey || e.shiftKey) toggleMemo(Number(k)); else setValue(Number(k)); e.preventDefault(); }
+  else if (k === 'Backspace' || k === 'Delete' || k === '0') $('tErase').onclick();
+  else if ((e.ctrlKey || e.metaKey) && k === 'z') $('tUndo').onclick();
+  else if (k.indexOf('Arrow') === 0) {
+    if (G.sel < 0) G.sel = 0;
+    var r = Math.floor(G.sel/n), c = G.sel%n;
+    if (k === 'ArrowUp') r = (r+n-1)%n; if (k === 'ArrowDown') r = (r+1)%n; if (k === 'ArrowLeft') c = (c+n-1)%n; if (k === 'ArrowRight') c = (c+1)%n;
+    G.sel = r*n+c; render(); e.preventDefault();
+  }
+});
+
+/* ---------- boot ---------- */
+applyTheme(); updateHelp(); renderHome(); save();
+if (!S.set.helped) openHelp();
+})();
+</script>
+</body>
+</html>
