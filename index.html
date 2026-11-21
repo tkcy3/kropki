@@ -61,8 +61,12 @@ button:active{transform:scale(.95)}
 
 /* ---------- game ---------- */
 .bar{display:flex;align-items:center;gap:8px;padding:8px var(--side);height:62px}
-.bar .title{flex:1;text-align:center;font-size:20px;font-weight:800;border:2px solid var(--btn);border-radius:12px;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;overflow:hidden}
-.bar .title .tm{font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted);font-size:17px}
+.bar .title{flex:1;min-width:0;font-size:var(--tfz,19px);font-weight:800;border:2px solid var(--btn);border-radius:12px;height:46px;display:flex;align-items:center;justify-content:center;gap:.6em;padding:0 14px;white-space:nowrap;overflow:hidden}
+#gTitle{display:flex;align-items:center;gap:.4em;flex:none}
+#gTitle .st{font-size:.74em;letter-spacing:-.04em}
+#gTitle .lv{font-weight:700}
+.bar .title .tm{flex:none;font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.86em;padding-left:.6em;border-left:1.5px solid var(--btn);line-height:1.2}
+.bar .title .tm:empty{display:none}
 #boardWrap{position:relative;flex:1;display:flex;align-items:flex-end;justify-content:center;min-height:0;padding:4px var(--side) 6px}
 #board{flex:none;position:relative;background:var(--line);border:3px solid var(--frame);border-radius:4px;box-shadow:0 3px 12px rgba(0,0,0,.15)}
 .cell{position:absolute;background:var(--cell);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs) * var(--fz,.74));line-height:1;color:var(--user);font-weight:800}
@@ -668,6 +672,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.15.1', d:'2026-11-21', items:['上の「9×9 ★★★ Lv.1 ⏱」の枠に左右のゆとりを持たせ、タイムを区切り線で分けました']},
   {v:'0.15.0', d:'2026-11-21', items:['📝 プレイデータの送信は、内容を確認して同意したときだけ行うようにしました（目的はゲームバランスの調整・改善。個人情報は送りません）']},
   {v:'0.14.0', d:'2026-11-21', items:['📝 クリアの記録を作者のスプレッドシートに送るようにしました（設定の「プレイ記録を送る」でオフにできます）']},
   {v:'0.13.4', d:'2026-11-21', items:['4×4〜6×6 の仮置きボタンの数字を大きくしました','ホームの🏆表示をなくしました']},
@@ -1067,7 +1072,8 @@ function loadGame(g){
     adj[ctx.ea[e]].push({j:ctx.eb[e], t:ctx.et[e], e:e});
     adj[ctx.eb[e]].push({j:ctx.ea[e], t:ctx.et[e], e:e});
   }
-  $('gTitle').textContent = n + '×' + n + ' ' + DSTAR[g.diff] + ' Lv.' + g.level;
+  $('gTitle').innerHTML = '<b>' + n + '×' + n + '</b><span class="st">' + DSTAR[g.diff] + '</span><span class="lv">Lv.' + g.level + '</span>';
+  fitTitle();
   buildBoard(); buildPad(); layout(); render(); updateTime();
 }
 
@@ -1090,6 +1096,7 @@ function buildBoard(){
   b.dataset.cols = cols;
 }
 function layout(){
+  fitTitle();
   if (!G) return;
   // board edge lines up exactly with the header and buttons (same side margin)
   var w = $('boardWrap'), cs0 = getComputedStyle(w);
@@ -1492,7 +1499,7 @@ function startTutorial(){
   var g = {n:4, diff:0, level:0, p:p, vals:vals, memo:memo, time:0, hints:0, undo:[], sel:-1, done:false, tut:true};
   show('game'); loadGame(g);
   TUT = {i:0, play:false, steps:tutSteps(), ret:ret};
-  $('gTitle').textContent = 'チュートリアル';
+  $('gTitle').textContent = 'チュートリアル'; fitTitle();
   requestAnimationFrame(layout); tutShow();
 }
 function exitTut(){
@@ -1748,7 +1755,17 @@ setInterval(function(){  // one tick = 180 ms
 }, 180);
 
 /* ---------- timer ---------- */
-function updateTime(){ $('gTime').textContent = (G && S.set.timer && !(G.done && !G.time)) ? '⏱ ' + fmt(G.time) : ''; }
+function updateTime(){
+  var t = (G && S.set.timer && !(G.done && !G.time)) ? '⏱ ' + fmt(G.time) : '', el = $('gTime');
+  if (el.textContent === t) return;
+  var grow = el.textContent.length !== t.length; el.textContent = t; if (grow) fitTitle();
+}
+/* the title box keeps its side padding: the text shrinks (19px → 13px) instead of touching the frame */
+function fitTitle(){
+  var box = document.querySelector('.bar .title'); if (!box || !box.clientWidth) return;
+  var fz = 19; box.style.setProperty('--tfz', fz + 'px');
+  while (fz > 13 && box.scrollWidth > box.clientWidth) { fz -= .5; box.style.setProperty('--tfz', fz + 'px'); }
+}
 var lastTick = Date.now();
 setInterval(function(){
   var now = Date.now(), dt = (now - lastTick) / 1000; lastTick = now;
