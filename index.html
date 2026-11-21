@@ -55,7 +55,7 @@ button:active{transform:scale(.95)}
 .sizes button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--panel);border-color:var(--btn);padding:8px}
 .sizes b{font-size:38px;font-weight:900;line-height:1}
 .sizes .pb{width:72%;height:7px;border-radius:4px;background:var(--line);overflow:hidden}
-.sizes .pb i{display:block;height:100%;background:var(--good);border-radius:4px}
+.sizes .pb i{display:block;height:100%;background:var(--user);border-radius:4px}
 .sizes small{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
 .sizes .go{position:absolute;top:8px;right:10px;font-size:13px;font-weight:800;color:var(--accent)}
 
@@ -179,11 +179,12 @@ button:active{transform:scale(.95)}
 .lvGrid button{height:104px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--cell);border-color:var(--btn)}
 .lvGrid .thumb{width:46px;height:46px;border-width:1.5px}
 .thumb i.m{background:color-mix(in srgb,var(--user) 30%,var(--cell))}
-.thumb i.f{background:var(--good);opacity:.55}
+.thumb i.c{background:color-mix(in srgb,var(--user) 32%,var(--cell))}
 .lvGrid b{font-size:18px;font-weight:800;line-height:1}
 .lvGrid small{font-size:12px;color:var(--muted);min-height:1em;line-height:1}
-.lvGrid button.ok{background:color-mix(in srgb,var(--good) 16%,var(--cell))}
-.lvGrid button.ok small{color:var(--good)}
+.lvGrid button{position:relative;overflow:visible}
+.lvGrid .ck{position:absolute;top:-6px;right:-6px;width:21px;height:21px;border-radius:50%;background:var(--user);border:2px solid var(--panel);display:flex;align-items:center;justify-content:center}
+.lvGrid .ck svg{width:12px;height:12px}
 .lvGrid button.go{border-color:var(--accent);border-width:2px}
 .lvGrid button.go small{color:var(--accent);font-weight:700}
 #tHint{position:relative}
@@ -257,7 +258,7 @@ button.plain{padding:8px 12px;font-size:15px}
 .clearBox h2{margin:0;font-size:46px;letter-spacing:6px;color:var(--accent);font-weight:900}
 .clearBox .info{font-size:20px;margin:12px 0 4px}
 .clearBox .info b{font-size:30px;font-variant-numeric:tabular-nums}
-.clearBox .rec{color:var(--good);font-weight:800;font-size:18px;min-height:24px}
+.clearBox .rec{color:var(--accent);font-weight:800;font-size:18px;min-height:24px}
 .clearBox .btns{display:flex;gap:10px;margin-top:16px}
 .clearBox .btns button{height:64px;font-size:24px;font-weight:800}
 .clearBox .btns .home{flex:0 0 76px}
@@ -672,6 +673,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.15.2', d:'2026-11-21', items:['🗂 問題一覧のクリア済みは、解き終えた盤面（自分で埋めたマスは薄い青）と右上の✓で表示するようにしました','ホームのクリア数のバーもゲームの青に合わせました']},
   {v:'0.15.1', d:'2026-11-21', items:['上の「9×9 ★★★ Lv.1 ⏱」の枠に左右のゆとりを持たせ、タイムを区切り線で分けました']},
   {v:'0.15.0', d:'2026-11-21', items:['📝 プレイデータの送信は、内容を確認して同意したときだけ行うようにしました（目的はゲームバランスの調整・改善。個人情報は送りません）']},
   {v:'0.14.0', d:'2026-11-21', items:['📝 クリアの記録を作者のスプレッドシートに送るようにしました（設定の「プレイ記録を送る」でオフにできます）']},
@@ -1012,8 +1014,9 @@ function openChooser(){
   openOv('contOv');
 }
 /* ---------- level select: all 100 puzzles are open ---------- */
+var CHK_SVG = '<span class="ck"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.4 2.4 4.6-5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
 function openLevels(nn, d){
-  var p = prog(nn, d), grid = $('lvGrid'), first = null;
+  var p = prog(nn, d), grid = $('lvGrid'), first = null, dirty = false;
   $('lvTitle').textContent = nn + '×' + nn + '　' + DIFF[d] + ' ' + DSTAR[d];
   var cl = Object.keys(p.lv).length;
   $('lvStat').textContent = 'クリア ' + cl + ' / ' + LVMAX + (p.best ? '　ベスト ' + fmt(p.best) : '');
@@ -1021,18 +1024,21 @@ function openLevels(nn, d){
   for (var lv = 1; lv <= LVMAX; lv++) (function(lv){
     var b = document.createElement('button'), g = S.games[key(nn, d, lv)], sub = '', cls = '', th = '';
     if (g && !g.done) {
-      cls = p.lv[lv] !== undefined ? 'go ok' : 'go'; sub = '▶ ' + fmt(g.time);
+      cls = p.lv[lv] !== undefined ? 'go cl' : 'go'; sub = '▶ ' + fmt(g.time);
       for (var i = 0; i < nn*nn; i++) th += '<i class="' + (g.p.givens[i] ? 'g' : (g.vals[i] ? 'u' : (g.memo[i] ? 'm' : ''))) + '"></i>';
     } else if (p.lv[lv] !== undefined) {
-      cls = 'ok'; sub = p.lv[lv] ? fmt(p.lv[lv]) : '✓';
-      th = new Array(nn*nn + 1).join('<i class="f"></i>');
+      cls = 'cl'; sub = p.lv[lv] ? fmt(p.lv[lv]) : '';
+      if (!p.gv) p.gv = {};
+      if (!p.gv[lv] || p.gv[lv].length !== nn*nn) { p.gv[lv] = newGameState(nn, d, lv).p.givens.map(function(x){ return x ? 1 : 0; }).join(''); dirty = true; }   // cleared before this was kept
+      for (var j = 0; j < nn*nn; j++) th += '<i class="' + (p.gv[lv][j] === '1' ? 'g' : 'c') + '"></i>';
     } else th = new Array(nn*nn + 1).join('<i></i>');
-    if (!first && cls.indexOf('ok') < 0) first = b;
+    if (!first && cls.indexOf('cl') < 0) first = b;
     b.className = cls;
-    b.innerHTML = '<b>' + lv + '</b><div class="thumb" style="grid-template-columns:repeat(' + nn + ',1fr)">' + th + '</div><small>' + sub + '</small>';
+    b.innerHTML = (p.lv[lv] !== undefined ? CHK_SVG : '') + '<b>' + lv + '</b><div class="thumb" style="grid-template-columns:repeat(' + nn + ',1fr)">' + th + '</div><small>' + sub + '</small>';
     b.onclick = function(){ closeOv('lvOv'); startGame(nn, d, lv); };
     grid.appendChild(b);
   })(lv);
+  if (dirty) save();
   openOv('lvOv');
   if (first) requestAnimationFrame(function(){ first.scrollIntoView({block:'center'}); });
 }
@@ -1587,6 +1593,7 @@ function win(){
   if (G.level > p.c) p.c = G.level;
   var t = Math.floor(G.time), lb = p.lv[G.level];
   shareClear(t, lb !== undefined);
+  if (!p.gv) p.gv = {}; p.gv[G.level] = G.p.givens.map(function(x){ return x ? 1 : 0; }).join('');
   if (lb === undefined) rec = '';
   else if (!lb || t < lb) rec = '🏆 この問題のベスト更新！';
   if (lb === undefined || !lb || t < lb) p.lv[G.level] = t;
