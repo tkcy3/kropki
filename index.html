@@ -43,6 +43,7 @@ button:active{transform:scale(.95)}
 .logo .dots i.b{background:#000}
 .homeTop{position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:10px;display:flex;gap:8px}
 .icoBtn{width:48px;height:48px;font-size:22px;display:flex;align-items:center;justify-content:center;padding:0}
+.portalBtn{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:10px;width:auto;padding:0 14px;font-size:16px;font-weight:700;text-decoration:none;color:var(--fg);background:var(--panel);border:2px solid var(--btn);border-radius:12px}
 .homeBody{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:520px;margin:0 auto;padding:0 14px 16px}
 .cont{width:100%;padding:14px;font-size:22px;font-weight:700;margin-bottom:16px;border-color:var(--num);background:var(--num);color:var(--numTx);display:flex;align-items:center;justify-content:center;gap:10px}
 .cont small{font-size:15px;font-weight:400;color:var(--numTx);opacity:.85}
@@ -281,6 +282,7 @@ button.plain{padding:8px 12px;font-size:15px}
 
 <!-- HOME -->
 <div id="home" class="screen on">
+  <a class="icoBtn portalBtn hidden" id="hPortal" href="/">‹ 一覧</a>
   <div class="homeTop">
     <button class="icoBtn" id="hHelp" aria-label="遊び方">?</button>
     <button class="icoBtn" id="hSet" aria-label="設定">⚙</button>
@@ -683,6 +685,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.17.0', d:'2026-11-22', items:['🎮 ゲーム一覧「あそびば」ができました。ホームの「‹ 一覧」から戻れます','📝 データ送信の同意は、あそびば・ほかのゲームと共通になりました（どこかで答えれば聞き直しません）']},
   {v:'0.16.1', d:'2026-11-22', items:['🐾 クリアした問題には、ネコの肉球スタンプが押されるようにしました']},
   {v:'0.16.0', d:'2026-11-22', items:['🗂 問題一覧をすっきりさせました（まだの問題は番号だけ、次の問題の上でネコが待っています）','🔓 まだ解いていない問題は、先頭から3問ずつ開くようにしました（クリア済み・途中の問題はいつでも選べます）']},
   {v:'0.15.2', d:'2026-11-21', items:['🗂 問題一覧のクリア済みは、解き終えた盤面（自分で埋めたマスは薄い青）と右上の✓で表示するようにしました','ホームのクリア数のバーもゲームの青に合わせました']},
@@ -837,6 +840,7 @@ function renderSettings(){
         var v = b.dataset.v;
         if (k === 'share' && v === '1' && S.consent !== 1) { openConsent(renderSettings); return; }   // turning it on needs the agreement
         S.set[k] = (k === 'theme') ? v : Number(v);
+        if (k === 'share') { try { localStorage.setItem('tkcy3_share', v); } catch(e) {} }
         save(); applyTheme(); renderSettings(); updateHelp(); if (k === 'bgm') bgmApply(); if (G) { if (k === 'dotRev') buildBoard(); layout(); render(); } updateTime();
       };
     });
@@ -855,14 +859,24 @@ function openConsent(after){
   openOv('consentOv');
 }
 $('csChk').onchange = function(){ $('csYes').disabled = !this.checked; };
+/* one answer for every game on tkcy3.github.io (shared with the game list "あそびば") */
+function csShared(){ try { return JSON.parse(localStorage.getItem('tkcy3_consent_v1') || 'null'); } catch(e) { return null; } }
+function csShare(ok){ try { localStorage.setItem('tkcy3_consent_v1', JSON.stringify({v:1, ok:ok ? 1 : 0, at:Date.now()})); localStorage.setItem('tkcy3_share', ok ? '1' : '0'); } catch(e) {} }
+(function(){   // adopt an answer given in the list or another game; follow the list's ON/OFF
+  var c = csShared(); if (!c) return;
+  if (S.consent === undefined || (c.ok && S.consent !== 1)) S.consent = c.ok ? 1 : 0;
+  var sh = null; try { sh = localStorage.getItem('tkcy3_share'); } catch(e) {}
+  S.set.share = (S.consent === 1 && sh !== '0') ? 1 : 0;
+})();
 function csDone(ok){
-  S.consent = ok ? 1 : 0; S.consentAt = Date.now(); S.set.share = ok ? 1 : 0; save(true);
+  S.consent = ok ? 1 : 0; S.consentAt = Date.now(); S.set.share = ok ? 1 : 0; save(true); csShare(ok);
   closeOv('consentOv'); var f = csAfter; csAfter = null; if (f) f();
 }
 $('csYes').onclick = function(){ if ($('csChk').checked) csDone(true); };
 $('csNo').onclick = function(){ csDone(false); };
 $('csInfo').onclick = function(){ openConsent(renderSettings); };
 /* first launch: (install screen) → consent → how to play */
+if (/github\.io$/.test(location.hostname)) $('hPortal').classList.remove('hidden');   // back to the game list
 function bootNext(){
   var help = function(){ if (!S.set.helped) openHelp(); };
   if (S.consent === undefined) openConsent(help); else help();
@@ -912,6 +926,7 @@ function instDone(){
 }
 function instShow(){
   if (!canInstall() || isApp()) return false;
+  try { if (sessionStorage.getItem('tkcy3_portal')) return false; } catch(e) {}   // came from the game list: it does the asking
   $('instOv').classList.remove('hidden');
   return true;
 }
