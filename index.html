@@ -332,6 +332,7 @@ button.plain{padding:8px 12px;font-size:15px}
   <div class="row">メモ自動消去<div class="seg" data-k="autoMemo"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">数字の大きさ<div class="seg" data-k="big"><button data-v="0">大</button><button data-v="1">特大</button></div></div>
   <div class="row">BGM<div class="seg" data-k="bgm"><button data-v="0">OFF</button><button data-v="1">小</button><button data-v="2">中</button><button data-v="3">大</button></div></div>
+  <div class="row">振動<div class="seg" data-k="vib"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">ねこ<div class="seg" data-k="cat"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row">タイマー<div class="seg" data-k="timer"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
   <div class="row"><span>プレイ記録を送る<br><button class="plain" id="csInfo" style="font-size:14px;padding:2px 0">送信内容について ›</button></span><div class="seg" data-k="share"><button data-v="1">ON</button><button data-v="0">OFF</button></div></div>
@@ -685,6 +686,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.17.2', d:'2026-11-23', items:['📳 設定に「振動」のON／OFFを追加しました（Dungeon Chain・LAPISとそろえました）']},
   {v:'0.17.1', d:'2026-11-23', items:['📱 ゲームコレクションの全画面表示に対応しました']},
   {v:'0.17.0', d:'2026-11-22', items:['🎮 ゲーム一覧「あそびば」ができました。ホームの「‹ 一覧」から戻れます','📝 データ送信の同意は、あそびば・ほかのゲームと共通になりました（どこかで答えれば聞き直しません）']},
   {v:'0.16.1', d:'2026-11-22', items:['🐾 クリアした問題には、ネコの肉球スタンプが押されるようにしました']},
@@ -767,7 +769,7 @@ var KEY = 'kropki-save-v1';
 var S = null;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
 if (!S || typeof S !== 'object') S = {};
-function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1, cat:1, bgm:1, share:0}; }
+function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1, cat:1, bgm:1, vib:1, share:0}; }
 S.set = Object.assign(defaultSet(), S.set || {});
 S.prog = S.prog || {};
 if (!S.set.calm) { S.set.calm = 1; S.set.theme = 'light'; }
@@ -1309,7 +1311,7 @@ function startCopy(i){
   if (G.vals[i] || !G.memo[i]) { toast('コピーできるのはメモだけです'); return; }
   if (HINT) endHint(); if (CHK) endCheck();
   COPY = {m:G.memo[i], src:i};
-  try { navigator.vibrate && navigator.vibrate(15); } catch(e) {}
+  if (S.set.vib !== 0) try { navigator.vibrate && navigator.vibrate(15); } catch(e) {}
   mark(i); G.sel = i;
   showMsg('📋 タップしたマスにコピーします', [{t:'終わる', f:endCopy}]);
   render();
