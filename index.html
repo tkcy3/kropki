@@ -685,6 +685,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.17.1', d:'2026-11-23', items:['📱 ゲームコレクションの全画面表示に対応しました']},
   {v:'0.17.0', d:'2026-11-22', items:['🎮 ゲーム一覧「あそびば」ができました。ホームの「‹ 一覧」から戻れます','📝 データ送信の同意は、あそびば・ほかのゲームと共通になりました（どこかで答えれば聞き直しません）']},
   {v:'0.16.1', d:'2026-11-22', items:['🐾 クリアした問題には、ネコの肉球スタンプが押されるようにしました']},
   {v:'0.16.0', d:'2026-11-22', items:['🗂 問題一覧をすっきりさせました（まだの問題は番号だけ、次の問題の上でネコが待っています）','🔓 まだ解いていない問題は、先頭から3問ずつ開くようにしました（クリア済み・途中の問題はいつでも選べます）']},
@@ -900,7 +901,7 @@ $('wipeBtn').onclick = function(){
 /* ---------- add to home screen (GitHub Pages only) ---------- */
 var A2H = null;
 function canInstall(){ return /github\.io$/.test(location.hostname) || location.protocol === 'https:' && !/claude|anthropic|claudeusercontent/.test(location.hostname); }
-function isApp(){ try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch(e) { return false; } }
+function isApp(){ try { return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true; } catch(e) { return false; } }
 function refreshA2H(){
   var tot = 0; for (var k in S.prog) tot += S.prog[k].cnt || 0;
   $('a2hChip').classList.toggle('hidden', !canInstall() || isApp() || !!S.a2h || tot < 1);
