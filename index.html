@@ -180,6 +180,13 @@ button:active{transform:scale(.95)}
 .lvGrid .thumb{width:58%;height:auto;aspect-ratio:1;border-width:1.5px}
 .lvGrid button.pl b{font-size:14px;color:var(--muted)}
 .lvGrid button.lk{opacity:.32;pointer-events:none;border-color:var(--line)}
+.lvGrid .paw{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.lvGrid .paw svg{width:62%;fill:color-mix(in srgb,var(--user) 26%,var(--cell));transform:translateY(-9%)}
+.lvGrid .pawS{position:absolute;top:5px;right:5px;pointer-events:none}
+.lvGrid .pawS svg{width:16px;fill:var(--user)}
+.lvGrid button.cl b,.lvGrid button.cl small{position:relative}
+.lvGrid button.cl:not(.pl) b{top:5%}
+.lvGrid button.cl:not(.pl) small{position:absolute;bottom:6px;left:0;right:0;text-align:center}
 .lvGrid .lvCat{position:absolute;top:-19px;left:9px;pointer-events:none}
 .thumb i.m{background:color-mix(in srgb,var(--user) 30%,var(--cell))}
 .thumb i.c{background:color-mix(in srgb,var(--user) 32%,var(--cell))}
@@ -676,6 +683,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.16.1', d:'2026-11-22', items:['🐾 クリアした問題には、ネコの肉球スタンプが押されるようにしました']},
   {v:'0.16.0', d:'2026-11-22', items:['🗂 問題一覧をすっきりさせました（まだの問題は番号だけ、次の問題の上でネコが待っています）','🔓 まだ解いていない問題は、先頭から3問ずつ開くようにしました（クリア済み・途中の問題はいつでも選べます）']},
   {v:'0.15.2', d:'2026-11-21', items:['🗂 問題一覧のクリア済みは、解き終えた盤面（自分で埋めたマスは薄い青）と右上の✓で表示するようにしました','ホームのクリア数のバーもゲームの青に合わせました']},
   {v:'0.15.1', d:'2026-11-21', items:['上の「9×9 ★★★ Lv.1 ⏱」の枠に左右のゆとりを持たせ、タイムを区切り線で分けました']},
@@ -1018,6 +1026,10 @@ function openChooser(){
   openOv('contOv');
 }
 /* ---------- level select: all 100 puzzles are open ---------- */
+var PAW = ["..##.##..","..##.##..","##.....##","##.###.##","..#####..",".#######.",".#######.","..#####.."];
+var PAW_SVG = (function(){ var s = '<svg viewBox="0 0 9 8" style="display:block;shape-rendering:crispEdges">';
+  for (var y = 0; y < 8; y++) for (var x = 0; x < 9; x++) if (PAW[y][x] === '#') s += '<rect x="' + x + '" y="' + y + '" width="1.02" height="1.02"/>';
+  return s + '</svg>'; })();
 var CHK_SVG = '<span class="ck"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.4 2.4 4.6-5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
 var LV_AHEAD = 3;   // unsolved puzzles open at a time (cleared and started ones stay open)
 function lvOpen(nn, d){   // → {open:{lv:1}, next:first unsolved open level or 0}
@@ -1041,16 +1053,14 @@ function openLevels(nn, d){
       cls = p.lv[lv] !== undefined ? 'go cl' : 'go'; sub = '▶ ' + fmt(g.time);
       for (var i = 0; i < nn*nn; i++) th += '<i class="' + (g.p.givens[i] ? 'g' : (g.vals[i] ? 'u' : (g.memo[i] ? 'm' : ''))) + '"></i>';
     } else if (p.lv[lv] !== undefined) {
-      cls = 'cl'; sub = p.lv[lv] ? fmt(p.lv[lv]) : '';
-      if (!p.gv) p.gv = {};
-      if (!p.gv[lv] || p.gv[lv].length !== nn*nn) { p.gv[lv] = newGameState(nn, d, lv).p.givens.map(function(x){ return x ? 1 : 0; }).join(''); dirty = true; }   // cleared before this was kept
-      for (var j = 0; j < nn*nn; j++) th += '<i class="' + (p.gv[lv][j] === '1' ? 'g' : 'c') + '"></i>';
+      cls = 'cl'; sub = p.lv[lv] ? fmt(p.lv[lv]) : '';   // cleared: the cat's paw stamp, no board
     }
     if (lv === op.next) first = b;
     if (!op.open[lv]) cls = 'lk';
     b.className = cls + (th ? ' pl' : '');
-    b.innerHTML = (p.lv[lv] !== undefined ? CHK_SVG : '') + (lv === op.next ? '<span class="lvCat">' + catPix(CAT_SIT_A) + '</span>' : '') + '<b>' + lv + '</b>' +
-      (th ? '<div class="thumb" style="grid-template-columns:repeat(' + nn + ',1fr)">' + th + '</div><small>' + sub + '</small>' : '');
+    var cleared = p.lv[lv] !== undefined;
+    b.innerHTML = (cleared ? (th ? '<span class="pawS">' + PAW_SVG + '</span>' : '<span class="paw">' + PAW_SVG + '</span>') : '') + (lv === op.next ? '<span class="lvCat">' + catPix(CAT_SIT_A) + '</span>' : '') + '<b>' + lv + '</b>' +
+      (th ? '<div class="thumb" style="grid-template-columns:repeat(' + nn + ',1fr)">' + th + '</div>' : '') + (sub ? '<small>' + sub + '</small>' : '');
     b.onclick = function(){ if (!op.open[lv]) return; closeOv('lvOv'); startGame(nn, d, lv); };
     grid.appendChild(b);
   })(lv);
