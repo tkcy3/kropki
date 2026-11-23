@@ -36,29 +36,29 @@ button:active{transform:scale(.95)}
 
 /* ---------- home ---------- */
 #home{align-items:stretch}
-.logo{flex:none;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:62px 0 14px}
-.logo h1{margin:0;font-size:46px;letter-spacing:6px;font-weight:900;color:var(--fg)}
-.logo .dots{display:flex;justify-content:center;gap:14px;margin-top:10px}
-.logo .dots i{width:16px;height:16px;border-radius:50%;border:3px solid var(--fg);display:block;background:#fff}
+.logo{flex:1 0 auto;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:68px 0 18px}
+.logo h1{margin:0;font-size:40px;letter-spacing:6px;font-weight:900;color:var(--fg)}
+.logo .dots{display:flex;justify-content:center;gap:12px;margin-top:10px}
+.logo .dots i{width:14px;height:14px;border-radius:50%;border:3px solid var(--fg);display:block;background:#fff}
 .logo .dots i.b{background:#000}
 .homeTop{position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:10px;display:flex;gap:8px}
 .icoBtn{width:48px;height:48px;font-size:22px;display:flex;align-items:center;justify-content:center;padding:0}
 .portalBtn{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:10px;width:auto;padding:0 14px;font-size:16px;font-weight:700;text-decoration:none;color:var(--fg);background:var(--panel);border:2px solid var(--btn);border-radius:12px}
-.homeBody{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:520px;margin:0 auto;padding:0 14px 16px}
+.homeBody{flex:3 1 auto;max-height:680px;min-height:0;display:flex;flex-direction:column;width:100%;max-width:520px;margin:0 auto;padding:0 18px 20px}
 .cont{width:100%;padding:14px;font-size:22px;font-weight:700;margin-bottom:16px;border-color:var(--num);background:var(--num);color:var(--numTx);display:flex;align-items:center;justify-content:center;gap:10px}
 .cont small{font-size:15px;font-weight:400;color:var(--numTx);opacity:.85}
-.diffs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;container-type:inline-size}
+.diffs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;container-type:inline-size}
 /* the longest label (4 chars) always fits on one line with at least 10px on each side */
 .diffs button{padding:10px 10px;font-size:min(16px, calc(((100cqw - 24px) / 4 - 24px) / 4));font-weight:700;line-height:1.25;border-color:var(--btn);color:var(--muted);background:var(--panel);white-space:nowrap}
 .diffs button span{display:block;font-size:13px;letter-spacing:1px}
 .diffs button.on{border-color:var(--num);background:var(--num);color:var(--numTx)}
-.sizes{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:minmax(96px,1fr);gap:10px}
-.sizes button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--panel);border-color:var(--btn);padding:8px}
-.sizes b{font-size:38px;font-weight:900;line-height:1}
-.sizes .pb{width:72%;height:7px;border-radius:4px;background:var(--line);overflow:hidden}
+.sizes{flex:1;min-height:0;max-height:560px;display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:minmax(92px,1fr);gap:12px}
+.sizes button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:var(--panel);border-color:var(--btn);padding:8px}
+.sizes b{font-size:32px;font-weight:900;line-height:1;letter-spacing:1px}
+.sizes .pb{width:58%;height:6px;border-radius:4px;background:var(--line);overflow:hidden}
 .sizes .pb i{display:block;height:100%;background:var(--user);border-radius:4px}
-.sizes small{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
-.sizes .go{position:absolute;top:8px;right:10px;font-size:13px;font-weight:800;color:var(--accent)}
+.sizes small{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sizes .go{position:absolute;top:9px;right:9px;font-size:12px;font-weight:800;color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel));padding:3px 8px;border-radius:10px;line-height:1.2}
 
 /* ---------- game ---------- */
 .bar{display:flex;align-items:center;gap:8px;padding:8px var(--side);height:62px}
@@ -278,6 +278,7 @@ button.plain{padding:8px 12px;font-size:15px}
 .toast.on{opacity:1}
 #achToast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 10px);z-index:75;display:flex;gap:12px;align-items:center;min-width:250px;max-width:calc(100vw - 24px);padding:10px 16px 10px 12px;background:var(--panel);border:2px solid var(--accent);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.18);transform:translate(-50%,calc(-100% - 40px));transition:transform .35s cubic-bezier(.2,.9,.3,1.2);pointer-events:none}
 #achToast.show{transform:translate(-50%,0)}
+#achToast:not(.show){visibility:hidden;opacity:0;transition:transform .35s,opacity .2s,visibility 0s .35s}
 #achToast .ai{font-size:32px;line-height:1}
 #achToast small{display:block;font-size:12.5px;color:var(--accent);font-weight:700}
 #achToast b{font-size:17px}
@@ -712,6 +713,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.18.2', d:'2026-11-23', items:['ホーム画面の余白と文字の大きさを整えて、ゆったり見えるようにしました','全画面表示のとき、画面の上に実績の札の端が見えていたのを直しました']},
   {v:'0.18.1', d:'2026-11-23', items:['幅の狭いスマホで、ボタンの文字や仮置きの数字が枠に触れないようにしました']},
   {v:'0.18.0', d:'2026-11-23', items:['🏆 実績を追加しました（全27種、ひみつの実績もあります）。ホームの🏆から見られます']},
   {v:'0.17.2', d:'2026-11-23', items:['📳 設定に「振動」のON／OFFを追加しました（Dungeon Chain・LAPISとそろえました）']},
