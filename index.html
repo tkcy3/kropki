@@ -713,6 +713,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.18.4', d:'2026-11-23', items:['🎵 はじめて遊ぶときのBGMの音量を「中」にしました']},
   {v:'0.18.3', d:'2026-11-23', items:['チュートリアル完了画面のボタンの文字が切れていたのを直しました','全部の画面・案内・メッセージを点検し、幅の狭いスマホで仮置きの数字が枠からはみ出していたのを直しました']},
   {v:'0.18.2', d:'2026-11-23', items:['ホーム画面の余白と文字の大きさを整えて、ゆったり見えるようにしました','全画面表示のとき、画面の上に実績の札の端が見えていたのを直しました']},
   {v:'0.18.1', d:'2026-11-23', items:['幅の狭いスマホで、ボタンの文字や仮置きの数字が枠に触れないようにしました']},
@@ -800,7 +801,7 @@ var KEY = 'kropki-save-v1';
 var S = null;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
 if (!S || typeof S !== 'object') S = {};
-function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1, cat:1, bgm:1, vib:1, share:0}; }
+function defaultSet(){ return {theme:'light', err:1, same:1, autoMemo:1, timer:1, diff:1, helped:0, big:0, dotRev:1, calm:1, cat:1, bgm:2, vib:1, share:0}; }
 S.set = Object.assign(defaultSet(), S.set || {});
 S.prog = S.prog || {};
 if (!S.set.calm) { S.set.calm = 1; S.set.theme = 'light'; }
