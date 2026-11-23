@@ -131,11 +131,11 @@ button:active{transform:scale(.95)}
 .pad button{flex:1 1 0;min-width:0;padding:0;overflow:hidden}
 .memoRow{container-type:inline-size}
 /* memo digits grow with the button (small boards have wide buttons), never smaller than before, capped by the height */
-.memoRow button{height:var(--mh,54px);display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1.7em));justify-content:center;align-content:center;font-size:min(calc((var(--mh,54px) - 8px) / var(--rows,3) / 1.32), max(clamp(8px,2.6vw,13px), calc(((100cqw - (var(--n,9) - 1) * 6px) / var(--n,9) - 8px) / var(--cols,3) / 1.2)));line-height:1;color:var(--muted);padding:3px 2px;background:var(--memoBtn);border-color:var(--btn)}
+.memoRow button{height:var(--mh,54px);display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1.7em));justify-content:center;align-content:center;font-size:min(calc((var(--mh,54px) - 8px) / var(--rows,3) / 1.32), max(clamp(7.5px,2.5vw,13px), calc(((100cqw - (var(--n,9) - 1) * 6px) / var(--n,9) - 8px) / var(--cols,3) / 1.2)));line-height:1;color:var(--muted);padding:3px 2px;background:var(--memoBtn);border-color:var(--btn)}
 .memoRow button span{display:flex;align-items:center;justify-content:center}
 .memoRow button span.me{color:var(--fg);font-weight:900;font-size:var(--me,1.3em)}
-.numRow{padding-top:8px;padding-bottom:14px}
-.numRow button{height:66px;font-size:38px;font-weight:800;background:var(--num);color:var(--numTx);border-color:var(--num)}
+.numRow{padding-top:8px;padding-bottom:14px;container-type:inline-size}
+.numRow button{height:66px;font-size:min(38px, calc((100cqw - (var(--n,9) - 1) * 6px) / var(--n,9) * .95));font-weight:800;background:var(--num);color:var(--numTx);border-color:var(--num)}
 /* pressed feedback */
 .pad button,.tools button{transition:background .08s,transform .08s}
 .numRow button.press{background:var(--numPress);border-color:var(--numPress);color:var(--pressTx);transform:scale(.92)}
@@ -271,7 +271,7 @@ button.plain{padding:8px 12px;font-size:15px}
 .clearBox .info b{font-size:30px;font-variant-numeric:tabular-nums}
 .clearBox .rec{color:var(--accent);font-weight:800;font-size:18px;min-height:24px}
 .clearBox .btns{display:flex;gap:10px;margin-top:16px}
-.clearBox .btns button{height:64px;font-size:24px;font-weight:800}
+.clearBox .btns button{height:64px;font-size:24px;font-weight:800;white-space:nowrap;overflow:hidden;padding:0 14px}
 .clearBox .btns .home{flex:0 0 76px}
 .clearBox .btns .next{flex:1;border-color:var(--num);background:var(--num);color:var(--numTx)}
 .toast{position:fixed;left:50%;bottom:44%;transform:translateX(-50%);background:var(--panel);border:2px solid var(--btn);padding:10px 18px;border-radius:14px;font-size:18px;z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;width:max-content;max-width:calc(100vw - 32px);text-align:center;line-height:1.45}
@@ -713,6 +713,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.18.3', d:'2026-11-23', items:['チュートリアル完了画面のボタンの文字が切れていたのを直しました','全部の画面・案内・メッセージを点検し、幅の狭いスマホで仮置きの数字が枠からはみ出していたのを直しました']},
   {v:'0.18.2', d:'2026-11-23', items:['ホーム画面の余白と文字の大きさを整えて、ゆったり見えるようにしました','全画面表示のとき、画面の上に実績の札の端が見えていたのを直しました']},
   {v:'0.18.1', d:'2026-11-23', items:['幅の狭いスマホで、ボタンの文字や仮置きの数字が枠に触れないようにしました']},
   {v:'0.18.0', d:'2026-11-23', items:['🏆 実績を追加しました（全27種、ひみつの実績もあります）。ホームの🏆から見られます']},
@@ -849,6 +850,12 @@ Array.prototype.forEach.call(document.querySelectorAll('.ov'), function(ov){
   Array.prototype.forEach.call(ov.querySelectorAll('[data-close]'), function(b){ b.onclick = function(){ closeOv(ov.id); }; });
 });
 var cfCb = null;
+/* shrink a one-line label until it fits its button (keeps the side padding) */
+function fitBtn(el, max, min){
+  if (!el || !el.clientWidth) return;
+  var f = max; el.style.fontSize = f + 'px';
+  while (f > min && el.scrollWidth > el.clientWidth) { f -= 1; el.style.fontSize = f + 'px'; }
+}
 function confirmBox(msg, cb){ $('cfMsg').textContent = msg; cfCb = cb; openOv('cfOv'); }
 $('cfYes').onclick = function(){ closeOv('cfOv'); if (cfCb) cfCb(); };
 
@@ -1214,9 +1221,9 @@ window.addEventListener('resize', function(){ layout(); });
 try { new ResizeObserver(function(){ layout(); }).observe($('boardWrap')); } catch(e) {}
 
 function buildPad(){
-  var mr = $('memoRow'), nr = $('numRow'); mr.innerHTML = ''; nr.innerHTML = '';
+  var mr = $('memoRow'), nr = $('numRow'); mr.innerHTML = ''; nr.innerHTML = ''; nr.style.setProperty('--n', n);
   var cols = n <= 4 ? 2 : 3;
-  mr.style.setProperty('--cols', cols); mr.style.setProperty('--rows', Math.ceil(n / cols)); mr.style.setProperty('--n', n); mr.style.setProperty('--me', n <= 6 ? '1.2em' : '1.3em'); mr.style.setProperty('--mh', n <= 5 ? '62px' : '54px');
+  mr.style.setProperty('--cols', cols); mr.style.setProperty('--rows', Math.ceil(n / cols)); mr.style.setProperty('--n', n); mr.style.setProperty('--me', n <= 6 ? '1.2em' : '1.15em'); mr.style.setProperty('--mh', n <= 5 ? '62px' : '54px');
   for (var v = 1; v <= n; v++) (function(v){
     var m = document.createElement('button');
     var h = '';
@@ -1743,7 +1750,7 @@ function win(){
     render();
     setTimeout(function(){
       $('cTime').textContent = fmt(G.time); $('cSub').textContent = 'チュートリアル完了！'; $('cRec').textContent = '';
-      $('cNext').textContent = TUT && TUT.ret ? '元のゲームに戻る ▶' : '4×4 やさしいで遊ぶ ▶'; openOv('clearOv');
+      $('cNext').textContent = TUT && TUT.ret ? '元のゲームに戻る ▶' : '4×4で遊ぶ ▶'; openOv('clearOv'); fitBtn($('cNext'), 24, 13);
     }, 900);
     return;
   }
@@ -1767,7 +1774,7 @@ function win(){
     $('cTime').textContent = fmt(G.time);
     $('cSub').textContent = n + '×' + n + ' ' + DIFF[G.diff] + ' Lv.' + G.level + (p.lv[G.level] ? '　この問題のベスト ' + fmt(p.lv[G.level]) : '');
     $('cRec').textContent = rec;
-    openOv('clearOv');
+    openOv('clearOv'); fitBtn($('cNext'), 24, 13);
   }, 900 + n*90);
 }
 $('cNext').onclick = function(){
