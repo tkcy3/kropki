@@ -111,7 +111,7 @@ button:active{transform:scale(.95)}
 
 .tools{display:flex;justify-content:center;gap:8px;padding:4px var(--side) 8px}
 .tools button{flex:1 1 0;min-width:0;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:24px;line-height:1;gap:3px;padding:0}
-.tools button small{font-size:12px;color:var(--muted)}
+.tools button small{font-size:min(12px,3.4vw);color:var(--muted);white-space:nowrap}
 .tools svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
 #tHint svg{color:var(--accent)}
 .cell.tgt{box-shadow:inset 0 0 0 4px var(--accent);animation:tgt 1.2s ease-in-out infinite}
@@ -131,7 +131,7 @@ button:active{transform:scale(.95)}
 .pad button{flex:1 1 0;min-width:0;padding:0;overflow:hidden}
 .memoRow{container-type:inline-size}
 /* memo digits grow with the button (small boards have wide buttons), never smaller than before, capped by the height */
-.memoRow button{height:var(--mh,54px);display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1.7em));justify-content:center;align-content:center;font-size:min(calc((var(--mh,54px) - 8px) / var(--rows,3) / 1.2), max(clamp(9px,2.9vw,13px), calc(((100cqw - (var(--n,9) - 1) * 6px) / var(--n,9) - 8px) / var(--cols,3) / 1.2)));line-height:1;color:var(--muted);padding:3px 2px;background:var(--memoBtn);border-color:var(--btn)}
+.memoRow button{height:var(--mh,54px);display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1.7em));justify-content:center;align-content:center;font-size:min(calc((var(--mh,54px) - 8px) / var(--rows,3) / 1.32), max(clamp(8px,2.6vw,13px), calc(((100cqw - (var(--n,9) - 1) * 6px) / var(--n,9) - 8px) / var(--cols,3) / 1.2)));line-height:1;color:var(--muted);padding:3px 2px;background:var(--memoBtn);border-color:var(--btn)}
 .memoRow button span{display:flex;align-items:center;justify-content:center}
 .memoRow button span.me{color:var(--fg);font-weight:900;font-size:var(--me,1.3em)}
 .numRow{padding-top:8px;padding-bottom:14px}
@@ -712,6 +712,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.18.1', d:'2026-11-23', items:['幅の狭いスマホで、ボタンの文字や仮置きの数字が枠に触れないようにしました']},
   {v:'0.18.0', d:'2026-11-23', items:['🏆 実績を追加しました（全27種、ひみつの実績もあります）。ホームの🏆から見られます']},
   {v:'0.17.2', d:'2026-11-23', items:['📳 設定に「振動」のON／OFFを追加しました（Dungeon Chain・LAPISとそろえました）']},
   {v:'0.17.1', d:'2026-11-23', items:['📱 ゲームポータルの全画面表示に対応しました']},
