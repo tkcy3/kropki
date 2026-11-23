@@ -276,6 +276,24 @@ button.plain{padding:8px 12px;font-size:15px}
 .clearBox .btns .next{flex:1;border-color:var(--num);background:var(--num);color:var(--numTx)}
 .toast{position:fixed;left:50%;bottom:44%;transform:translateX(-50%);background:var(--panel);border:2px solid var(--btn);padding:10px 18px;border-radius:14px;font-size:18px;z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;width:max-content;max-width:calc(100vw - 32px);text-align:center;line-height:1.45}
 .toast.on{opacity:1}
+#achToast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 10px);z-index:75;display:flex;gap:12px;align-items:center;min-width:250px;max-width:calc(100vw - 24px);padding:10px 16px 10px 12px;background:var(--panel);border:2px solid var(--accent);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.18);transform:translate(-50%,calc(-100% - 40px));transition:transform .35s cubic-bezier(.2,.9,.3,1.2);pointer-events:none}
+#achToast.show{transform:translate(-50%,0)}
+#achToast .ai{font-size:32px;line-height:1}
+#achToast small{display:block;font-size:12.5px;color:var(--accent);font-weight:700}
+#achToast b{font-size:17px}
+#achMeter{text-align:center;color:var(--muted);font-size:15px;margin:-4px 0 12px}
+#achMeter .pb{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:8px auto 0;max-width:280px}
+#achMeter .pb i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.achGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ach{background:var(--cell);border:2px solid var(--btn);border-radius:12px;padding:10px 6px 9px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:118px}
+.ach .ai{font-size:30px;line-height:1.1}
+.ach b{font-size:13.5px;line-height:1.3}
+.ach small{font-size:11.5px;color:var(--muted);line-height:1.35}
+.ach .ap{width:80%;height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:auto}
+.ach .ap i{display:block;height:100%;background:var(--accent)}
+.ach.got{border-color:var(--accent)}
+.ach:not(.got) .ai{filter:grayscale(1);opacity:.35}
+.ach:not(.got) b{color:var(--muted)}
 </style>
 </head>
 <body class="light">
@@ -284,6 +302,7 @@ button.plain{padding:8px 12px;font-size:15px}
 <div id="home" class="screen on">
   <a class="icoBtn portalBtn hidden" id="hPortal" href="/">‹ 一覧</a>
   <div class="homeTop">
+    <button class="icoBtn" id="hAch" aria-label="実績">🏆</button>
     <button class="icoBtn" id="hHelp" aria-label="遊び方">?</button>
     <button class="icoBtn" id="hSet" aria-label="設定">⚙</button>
   </div>
@@ -441,6 +460,13 @@ button.plain{padding:8px 12px;font-size:15px}
 </div></div>
 
 <div class="toast" id="toast"></div>
+<div id="achToast"></div>
+<div class="ov" id="achOv"><div class="sheet">
+  <h2>🏆 実績</h2>
+  <div id="achMeter"></div>
+  <div class="achGrid" id="achGrid"></div>
+  <button class="closeBtn" data-close>閉じる</button>
+</div></div>
 
 <script>
 /* ===== Kropki core: generator & solver (shared by main thread and worker) ===== */
@@ -686,6 +712,7 @@ if (typeof module !== 'undefined') module.exports = KCORE;
 <script>
 (function(){
 var CHANGELOG = [
+  {v:'0.18.0', d:'2026-11-23', items:['🏆 実績を追加しました（全27種、ひみつの実績もあります）。ホームの🏆から見られます']},
   {v:'0.17.2', d:'2026-11-23', items:['📳 設定に「振動」のON／OFFを追加しました（Dungeon Chain・LAPISとそろえました）']},
   {v:'0.17.1', d:'2026-11-23', items:['📱 ゲームポータルの全画面表示に対応しました']},
   {v:'0.17.0', d:'2026-11-22', items:['🎮 ゲーム一覧「あそびば」ができました。ホームの「‹ 一覧」から戻れます','📝 データ送信の同意は、あそびば・ほかのゲームと共通になりました（どこかで答えれば聞き直しません）']},
@@ -893,9 +920,9 @@ $('resetBtn').onclick = function(){
 };
 $('wipeBtn').onclick = function(){
   closeOv('setOv');
-  confirmBox('記録・途中のゲーム・設定をすべて消して、最初の状態に戻しますか？', function(){
+  confirmBox('記録・実績・途中のゲーム・設定をすべて消して、最初の状態に戻しますか？', function(){
     var a2h = S.a2h;
-    S = {set:defaultSet(), prog:{}, games:{}, last:null, a2h:a2h};
+    S = {set:defaultSet(), prog:{}, games:{}, last:null, a2h:a2h, ach:{}, st:{pet:0, copy:0, days:{}, run:0}};
     save(true); applyTheme(); updateHelp(); renderHome(); bootNext();
   });
 };
@@ -1318,7 +1345,7 @@ function startCopy(i){
 }
 function pasteCopy(i){
   if (i === COPY.src || G.p.givens[i] || G.vals[i] || G.memo[i] === COPY.m) return;
-  pushUndo([snap(i)]); G.memo[i] = COPY.m;
+  pushUndo([snap(i)]); G.memo[i] = COPY.m; S.st.copy = (S.st.copy || 0) + 1; if (S.st.copy >= 30) unlock('copy');
   if (!G.tut) G.last = Date.now();
   render(); save(); animCell(i, 'mput');
 }
@@ -1373,6 +1400,7 @@ $('tErase').onclick = function(){
   pushUndo([snap(i)]); G.vals[i] = 0; G.memo[i] = 0; after(); animCell(i, 'del', ov ? String(ov) : '');
 };
 $('tUndo').onclick = function(){
+  if (G && !G.tut) G.undid = 1;
   if (tutBlock()) return;
   if (!G || G.done || !G.undo.length) return;
   var ch = G.undo.pop(), now = ch.map(function(c){ return snap(c.i); });
@@ -1620,9 +1648,93 @@ function shareClear(t, replay){
     if (!ok) fetch(SHARE_URL, {method:'POST', mode:'no-cors', body:body, keepalive:true}).catch(function(){});
   } catch(e) {}
 }
+/* ---------- achievements ----------
+   S.ach = {id: unlock time}; S.st = running stats (pets, copies, clear days, no-check streak) */
+if (!S.ach) S.ach = {};
+if (!S.st) S.st = {pet:0, copy:0, days:{}, run:0};
+function clearedTotal(){ var t = 0; for (var k in S.prog) t += Object.keys(S.prog[k].lv || {}).length; return t; }
+function clearedWith(f){ for (var k in S.prog) { var a = k.split('-'), lv = S.prog[k].lv || {}; for (var l in lv) if (f(+a[0], +a[1], lv[l], +l)) return true; } return false; }
+function dayStreak(){ var d = new Date(), c = 0; while (S.st.days[ymd(d)]) { c++; d.setDate(d.getDate() - 1); } return c; }
+function ymd(d){ return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+var ACHS = [
+  {id:'first', ic:'🌱', n:'はじめの一歩', d:'問題を1問クリア', goal:1, prog:clearedTotal},
+  {id:'c10', ic:'✏️', n:'10問クリア', d:'問題を10問クリア', goal:10, prog:clearedTotal},
+  {id:'c50', ic:'🎯', n:'50問クリア', d:'問題を50問クリア', goal:50, prog:clearedTotal},
+  {id:'c100', ic:'💯', n:'100問クリア', d:'問題を100問クリア', goal:100, prog:clearedTotal},
+  {id:'c300', ic:'🏅', n:'300問クリア', d:'問題を300問クリア', goal:300, prog:clearedTotal},
+  {id:'c1000', ic:'👑', n:'1000問クリア', d:'問題を1000問クリア', goal:1000, prog:clearedTotal},
+  {id:'allsize', ic:'🧩', n:'全サイズ制覇', d:'4×4〜9×9のすべてで1問以上クリア', goal:6, prog:function(){ var c = 0; for (var z = 4; z <= 9; z++) if (clearedWith(function(nn){ return nn === z; })) c++; return c; }},
+  {id:'big', ic:'🗺️', n:'大盤面デビュー', d:'9×9をクリア', test:function(){ return clearedWith(function(nn){ return nn === 9; }); }},
+  {id:'oni', ic:'👹', n:'鬼退治', d:'「鬼」の問題をクリア', test:function(){ return clearedWith(function(nn, dd){ return dd === 3; }); }},
+  {id:'oni9', ic:'🔥', n:'鬼の中の鬼', d:'「鬼」の9×9をクリア', test:function(){ return clearedWith(function(nn, dd){ return nn === 9 && dd === 3; }); }},
+  {id:'full', ic:'📚', n:'100問踏破', d:'どれか1つのサイズ・難しさで100問すべてクリア', test:function(){ for (var k in S.prog) if (Object.keys(S.prog[k].lv || {}).length >= LVMAX) return true; return false; }},
+  {id:'fast4', ic:'⚡', n:'電光石火', d:'4×4を20秒以内にクリア', test:function(){ return clearedWith(function(nn, dd, t){ return nn === 4 && t > 0 && t <= 20; }); }},
+  {id:'fast6', ic:'🏃', n:'早解き', d:'6×6を2分以内にクリア', test:function(){ return clearedWith(function(nn, dd, t){ return nn === 6 && t > 0 && t <= 120; }); }},
+  {id:'fast9', ic:'🚀', n:'9×9の達人', d:'9×9を10分以内にクリア', test:function(){ return clearedWith(function(nn, dd, t){ return nn === 9 && t > 0 && t <= 600; }); }},
+  {id:'self', ic:'🧠', n:'自力で解いた', d:'チェックを使わずに、難しい以上の9×9をクリア'},
+  {id:'ink', ic:'✒️', n:'一筆書き', d:'「戻る」を使わずに7×7以上をクリア'},
+  {id:'run10', ic:'🔗', n:'ノーチェック10連', d:'チェックを使わずに10問続けてクリア', goal:10, prog:function(){ return S.st.run; }},
+  {id:'best', ic:'📈', n:'自己ベスト更新', d:'解き直して、その問題のタイムを縮めた'},
+  {id:'day3', ic:'📅', n:'三日坊主卒業', d:'3日続けてクリア', goal:3, prog:dayStreak},
+  {id:'day7', ic:'🗓️', n:'1週間皆勤', d:'7日続けてクリア', goal:7, prog:dayStreak},
+  {id:'copy', ic:'📋', n:'コピー名人', d:'メモのコピーを30回使う', goal:30, prog:function(){ return S.st.copy; }},
+  {id:'tut', ic:'🎓', n:'入門', d:'チュートリアルをクリア', test:function(){ return !!S.set.tutDone; }},
+  {id:'night', ic:'🌙', n:'夜ふかし', d:'夜0時〜4時にクリア', secret:1},
+  {id:'morning', ic:'🌅', n:'早起き', d:'朝5時〜7時にクリア', secret:1},
+  {id:'slow', ic:'🐢', n:'じっくり派', d:'1問に60分以上かけてクリア', secret:1, test:function(){ return clearedWith(function(nn, dd, t){ return t >= 3600; }); }},
+  {id:'pet10', ic:'🐈‍⬛', n:'ネコと仲良し', d:'ネコを10回なでる', secret:1, goal:10, prog:function(){ return S.st.pet; }},
+  {id:'pet100', ic:'💕', n:'ネコの親友', d:'ネコを100回なでる', secret:1, goal:100, prog:function(){ return S.st.pet; }}
+];
+var achQ = [], achBusy = false;
+function achGot(){ return Object.keys(S.ach).length; }
+function unlock(id, quiet){
+  if (S.ach[id]) return;
+  S.ach[id] = Date.now(); save();
+  if (!quiet) { achQ.push(id); achNext(); }
+}
+function achNext(){
+  if (achBusy || !achQ.length) return;
+  var a = ACHS.filter(function(x){ return x.id === achQ[0]; })[0]; achQ.shift(); if (!a) return achNext();
+  achBusy = true;
+  var t = $('achToast');
+  t.innerHTML = '<span class="ai">' + a.ic + '</span><span><small>' + (a.secret ? 'ひみつの実績を解除' : '実績を解除') + '（' + achGot() + '/' + ACHS.length + '）</small><b>' + a.n + '</b></span>';
+  requestAnimationFrame(function(){ t.classList.add('show'); });
+  setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ achBusy = false; achNext(); }, 420); }, 2600);
+}
+function achCheck(quiet){   // anything that can be read from the saved progress
+  ACHS.forEach(function(a){
+    if (S.ach[a.id]) return;
+    if ((a.test && a.test()) || (a.goal && a.prog && a.prog() >= a.goal)) unlock(a.id, quiet);
+  });
+}
+function openAch(){
+  var got = achGot();
+  $('achMeter').innerHTML = got + ' / ' + ACHS.length + '<div class="pb"><i style="width:' + (got * 100 / ACHS.length) + '%"></i></div>';
+  $('achGrid').innerHTML = ACHS.map(function(a){
+    var g = !!S.ach[a.id], hide = a.secret && !g;
+    var pr = (!g && a.goal > 1 && a.prog && !hide) ? '<div class="ap"><i style="width:' + Math.min(100, a.prog() * 100 / a.goal) + '%"></i></div><small>' + Math.min(a.prog(), a.goal) + ' / ' + a.goal + '</small>' : '';
+    return '<div class="ach' + (g ? ' got' : '') + '"><span class="ai">' + (hide ? '？' : a.ic) + '</span><b>' + (hide ? '？？？' : a.n) + '</b><small>' + (hide ? 'ひみつの実績' : a.d) + '</small>' + pr + '</div>';
+  }).join('');
+  openOv('achOv');
+}
+$('hAch').onclick = openAch;
+achCheck(true);   // earlier progress counts, without a parade of banners
+/* called from win() for things only known at the moment of clearing */
+function achOnClear(t, replay, improved){
+  var h = new Date().getHours();
+  S.st.days[ymd(new Date())] = 1;
+  S.st.run = G.chk ? 0 : (S.st.run || 0) + 1;
+  if (!G.chk && n === 9 && G.diff >= 2) unlock('self');
+  if (!G.undid && n >= 7) unlock('ink');
+  if (replay && improved) unlock('best');
+  if (h < 4) unlock('night');
+  if (h >= 5 && h < 7) unlock('morning');
+  achCheck(false);
+}
 function win(){
   G.done = true; G.sel = -1; catPoke('party');
   if (G.tut) {
+    S.set.tutDone = 1; save(); setTimeout(function(){ achCheck(false); }, 1200);
     clearMark(); clearMsg();
     for (var t = 0; t < N; t++) { var te = cellEls[t]; te.style.animationDelay = ((Math.floor(t/n) + t%n) * 45) + 'ms'; te._keep = 'wave'; }
     render();
@@ -1644,6 +1756,7 @@ function win(){
   if (lb === undefined || !lb || t < lb) p.lv[G.level] = t;
   if (!p.best || t < p.best) { if (p.best && !rec) rec = '🏆 ベスト更新！'; p.best = t; }
   delete S.games[key(n, G.diff, G.level)];
+  achOnClear(t, lb !== undefined, lb !== undefined && (!lb || t < lb));
   save(true); render();
   for (var i = 0; i < N; i++) { var el = cellEls[i]; el.style.animationDelay = ((Math.floor(i/n) + i%n) * 45) + 'ms'; el._keep = 'wave'; }
   render();
@@ -1758,7 +1871,7 @@ function catPoke(kind){
   else if (kind === 'think') catReact(catShut(CAT_SIT_B), '?', 7);
   else if (kind === 'pet') catReact(catShut(CAT_SIT_A), '♡', 6);
 }
-$('catBox').addEventListener('pointerdown', function(){ catPoke('pet'); });
+$('catBox').addEventListener('pointerdown', function(){ catPoke('pet'); S.st.pet = (S.st.pet || 0) + 1; save(); if (S.st.pet >= 10) unlock('pet10'); if (S.st.pet >= 100) unlock('pet100'); });
 setInterval(function(){  // one tick = 180 ms
   if (!CAT.on || !$('game').classList.contains('on') || document.hidden) return;
   CAT.tick++;
